@@ -55,7 +55,7 @@ router.post("/register", async (req, res) => {
 
 
         await sendOTPEmail(email, otp)
-       return res.status(200).json({ message: "OTP sent to your email" });
+        return res.status(200).json({ message: "OTP sent to your email" });
 
     } catch (error) {
         console.log("something get wrong", error)
@@ -144,7 +144,7 @@ router.post("/send-otp", async (req, res) => {
 
         await sendOTPEmail(email, otp);
 
-       return res.status(200).json({
+        return res.status(200).json({
             message: "OTP sent successfully",
         });
 
@@ -209,11 +209,13 @@ router.post("/verifyOtp", async (req, res) => {
                     });
                 }
 
+                const hashedPassword = await bcrypt.hash(password.toString(), 10)
+                const hashedConfirmPassword = await bcrypt.hash(confirmPassword.toString(), 10);
                 await user.create({
                     name,
                     email,
-                    password,
-                    confirmPassword,
+                    password: hashedPassword,
+                    confirmPassword: hashedConfirmPassword,
                     isVerified: true
                 });
 
@@ -269,11 +271,14 @@ router.post("/verifyOtp", async (req, res) => {
 router.post("/login", async (req, res) => {
     try {
         const body = req.body;
+        console.log('body: ', typeof body.password);
         const userData = await user.findOne({ email: body.email });
+        console.log('userData: ', typeof userData.password);
         if (!userData) {
             return res.status(404).json({ message: "User not found" })
         }
         const isMatch = await bcrypt.compare(body.password, userData.password);
+        console.log('isMatch: ', isMatch);
         if (!isMatch) {
             return res.status(401).json({ message: "Invalid Email or Password" })
         }
@@ -434,7 +439,7 @@ router.post("/change-password", verifyToken, async (req, res) => {
             return res.status(400).json({ message: "Passwords do not match" });
         }
 
-        const userId = req.user; 
+        const userId = req.user;
         const userData = await user.findById(userId);
         if (!userData) return res.status(404).json({ message: "User not found" });
 
