@@ -148,7 +148,6 @@ exports.removeItem = async (req, res) => {
         const id = req.user;
         const { productId } = req.params;
         let cartData = await cartRepo.findCartByUserId(id);
-        console.log("cart data before update:", cartData);
 
         if (!cartData) {
             return res.status(400).json({ message: "Cart not found" });
@@ -171,21 +170,34 @@ exports.removeItem = async (req, res) => {
         await cartData.save();
 
         return res.status(200).json({
-            data: cart, message: "Product removed from cart successfully",
+            data: cartData, message: "Product removed from cart successfully",
         });
     } catch (error) {
         console.error("removeItem cart error:", error);
         res.status(500).json({
-            success: false,
             message: "Failed to remove item from the cart",
         });
     }
 }
 
 
-exports.clearCart = async (req,res) => {
+exports.clearCart = async (req, res) => {
     try {
-        
+        const id = req.user;
+        let cartData = await cartRepo.findCartByUserId(id);
+
+        if (!cartData) {
+            return res.status(400).json({ message: "Cart not found" });
+        }
+
+        // clear items and  subtotal
+        cart.items = [];
+        cart.subtotal = 0;
+
+        await cartData.save();
+
+        return res.status(200).json({ message: "Cart cleared successfully", data: cartData,
+        });
     } catch (error) {
         console.error("clear cart error:", error);
         res.status(500).json({

@@ -36,3 +36,12 @@ exports.removeItem= async (req,res) => {
          res.status(error.status || 500).json ({message:error.message});
     }
 }
+
+exports.clearCart= async (req,res) => {
+    try {
+        const data = await cartServices.clearCart(req,res);
+         res.status(200).json(data)
+    } catch (error) {
+         res.status(error.status || 500).json ({message:error.message});
+    }
+}
