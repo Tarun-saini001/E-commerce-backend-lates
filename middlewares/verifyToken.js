@@ -10,12 +10,12 @@ function verifyToken(req, res, next) {
   }
 
 
-  console.log('token: ', token);
+  // console.log('token: ', token);
   if (!token) {
     return res.status(401).json({ message: "Access token missing" });
   }
-console.log("reach")
-console.log("SECRET:", process.env.JWT_SECRET_KEY);
+// console.log("reach")
+// console.log("SECRET:", process.env.JWT_SECRET_KEY);
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     console.log('decoded: ', decoded);

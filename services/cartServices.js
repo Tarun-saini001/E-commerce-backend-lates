@@ -9,7 +9,7 @@ exports.addToCart = async (req, res) => {
         const userId = req.user;
 
         const {
-            productId,
+            id,
             title,
             price,
             thumbnail,
@@ -18,7 +18,7 @@ exports.addToCart = async (req, res) => {
             quantity = 1
         } = req.body;
 
-        if (!productId || !title || !price) {
+        if (!id || !title || !price) {
             return res.status(400).json({
                 message: "Product data missing",
             });
@@ -35,14 +35,14 @@ exports.addToCart = async (req, res) => {
         }
 
         const existingItem = cartData.items.find(
-            (item) => item.productId === Number(productId)
+            (item) => Number(item.id) === Number(id)
         );
 
         if (existingItem) {
             existingItem.quantity += quantity;
         } else {
             cartData.items.push({
-                productId,
+                id: Number(id),
                 title,
                 price,
                 thumbnail,
@@ -58,13 +58,14 @@ exports.addToCart = async (req, res) => {
             0
         );
         await cartData.save();
-        return res.status(200).json({
+
+        return {
             message: "Product added to cart",
             data: cartData,
-        });
+        };
     } catch (error) {
         console.error("Add to cart error:", error);
-        return res.status(500).json({
+        res.status(500).json({
             message: "Server error",
         });
     }
@@ -74,6 +75,7 @@ exports.getCart = async (req, res) => {
     try {
         const id = req.user;
         const cartData = await cartRepo.findCartByUserId(id)
+        console.log('cartData: ', cartData);
 
         if (!cartData) {
             return res.status(200).json({
@@ -84,9 +86,10 @@ exports.getCart = async (req, res) => {
             });
         }
 
-        res.status(200).json({
+        return {
+            messsage: "Cart fetched successfully",
             data: cartData,
-        });
+        };
 
     } catch (error) {
         console.error("get cart error:", error);
@@ -115,7 +118,7 @@ exports.updateCart = async (req, res) => {
         }
         console.log('productId: ', productId);
         const itemIndex = cartData.items.findIndex(
-            (item) => item.productId.toString() === productId.toString()
+            (item) => item.id.toString() === productId.toString()
         )
         if (itemIndex === -1) {
             return res.status(404).json({ message: "Product not found in cart" })
@@ -131,8 +134,10 @@ exports.updateCart = async (req, res) => {
 
         await cartData.save();
         console.log("cart data after update:", cartData);
-
-        res.status(200).json({ data: cartData, messsage: "Cart update successfully" })
+        return {
+            data: cartData,
+            message: "Cart update successfully"
+        }
     } catch (error) {
         console.error("update cart error:", error);
         res.status(500).json({
@@ -155,7 +160,7 @@ exports.removeItem = async (req, res) => {
         console.log('productId: ', productId);
 
         const newCartItems = cartData.items.filter(
-            (item) => item.productId.toString() !== productId.toString()
+            (item) => item.id.toString() !== productId.toString()
         )
 
         if (newCartItems.length === cartData.items.length) {
@@ -169,9 +174,10 @@ exports.removeItem = async (req, res) => {
         );
         await cartData.save();
 
-        return res.status(200).json({
-            data: cartData, message: "Product removed from cart successfully",
-        });
+        return {
+            data: cartData,
+            message: "Product removed from cart successfully",
+        };
     } catch (error) {
         console.error("removeItem cart error:", error);
         res.status(500).json({
@@ -191,13 +197,15 @@ exports.clearCart = async (req, res) => {
         }
 
         // clear items and  subtotal
-        cart.items = [];
-        cart.subtotal = 0;
+        cartData.items = [];
+        cartData.subtotal = 0;
 
         await cartData.save();
 
-        return res.status(200).json({ message: "Cart cleared successfully", data: cartData,
-        });
+        return {
+            message: "Cart cleared successfully",
+            data: cartData,
+        };
     } catch (error) {
         console.error("clear cart error:", error);
         res.status(500).json({
