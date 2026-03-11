@@ -1,27 +1,50 @@
-// container code that talks to database
 const user = require("../models/user");
 
-export async function create(email, data) {
-    // save data in user table   
+exports.findUserByEmail = async (email) => {
     try {
-
-
-    } catch (e) {
-
+        return await user.findOne({ email });
+    } catch (error) {
+        console.log("Error fetching user by email:", error);
+        throw error;
     }
-}
-export function findOneAndUpdate(email, query) {
-    // save user data by id
-    
-}
+};
 
-export function deleteUserById(id) {
+exports.findUserById = async (id) => {
+    try {
+        return await user.findById(id);
+    } catch (error) {
+        console.log("Error fetching user by id:", error);
+        throw error;
+    }
+};
 
-}
-export async function getUser() {
-    const res = await user.findOne({ email }).catch((error) => {
-        console.log("Error while getting user from database", error)
-        throw error
-    });
-    return res
-}
+exports.createUser = async (data) => {
+    try {
+        return await user.create(data);
+    } catch (error) {
+        console.log("Error creating user:", error);
+        throw error;
+    }
+};
+
+exports.updateUserPassword = async (id, password) => {
+    try {
+        return await user.findByIdAndUpdate(
+            id,
+            { password },
+            { new: true }
+        );
+    } catch (error) {
+        console.log("Error updating password:", error);
+        throw error;
+    }
+};
+
+exports.getUserWithoutPassword = async (id) => {
+    try {
+        return await user.findById(id).select("-password -confirmPassword");
+    } catch (error) {
+        console.log("Error fetching user profile:", error);
+        throw error;
+    }
+};

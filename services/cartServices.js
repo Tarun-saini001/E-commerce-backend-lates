@@ -1,9 +1,9 @@
 const verifyToken = require("../middlewares/verifyToken");
 const cart = require("../models/cart");
 const router = require("express").Router();
+const cartRepo = require("../repository/cart.repository")
 
-
-exports.addToCart= async (req, res) => {
+exports.addToCart = async (req, res) => {
     try {
         console.log('req.user: ', req.user);
         const userId = req.user;
@@ -24,7 +24,8 @@ exports.addToCart= async (req, res) => {
             });
         }
 
-        let cartData = await cart.findOne({ user: userId });
+        let cartData = await cartRepo.findCartByUserId({ userId });
+        console.log('cartData: ', cartData);
         // create cart if not exist
         if (!cartData) {
             cartData = new cart({

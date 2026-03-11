@@ -11,9 +11,12 @@ const generateOTP = require("../utils/generateOTP");
 const sendOTPEmail = require("../utils/email");
 const { OTP_FOR } = require("../config/constants");
 
+const userRepo = require("../repository/user.repository")
+const otpRepo = require("../repository/otp.repository")
+const tokenRepo = require("../repository/token.repository")
 
 
-exports.register = async (req,res) => {
+exports.register = async (req, res) => {
     try {
         const { name, email, password, confirmPassword } = req.body;
 
@@ -21,7 +24,8 @@ exports.register = async (req,res) => {
             return res.status(400).json({ message: "Passwords do not match" });
         }
 
-        const existingUser = await user.findOne({ email });
+        const existingUser = await userRepo.findUserByEmail({ email });
+
         console.log('existingUser: ', existingUser);
         if (existingUser) {
             return res.status(400).json({ message: "User already registered" });
@@ -33,25 +37,7 @@ exports.register = async (req,res) => {
         // const hashedPassword = await bcrypt.hash(password.toString(), 10);
         // const hashedConfirmPassword = await bcrypt.hash(confirmPassword.toString(), 10);
 
-        await OTP.findOneAndUpdate(
-            {
-                email,
-                otpType: OTP_FOR.REGISTER,
-            },
-            {
-                $set: {
-                    email,
-                    otp,
-                    otpType: OTP_FOR.REGISTER,
-                    expiresAt: new Date(Date.now() + 1 * 60 * 1000)
-                },
-            },
-            {
-                new: true,
-                upsert: true,
-                setDefaultsOnInsert: true,
-            }
-        );
+        await otpRepo.saveOTP({ email, otp, otpType: OTP_FOR.REGISTER });
 
 
         await sendOTPEmail(email, otp)
@@ -64,7 +50,7 @@ exports.register = async (req,res) => {
 }
 
 
-exports.sendOtp = async (req,res) => {
+exports.sendOtp = async (req, res) => {
 
     try {
 
@@ -80,7 +66,7 @@ exports.sendOtp = async (req,res) => {
 
             case OTP_FOR.REGISTER: {
 
-                const existingUser = await user.findOne({ email });
+                const existingUser = await userRepo.findUserByEmail({ email });
 
                 if (existingUser) {
                     return res.status(400).json({
@@ -93,7 +79,7 @@ exports.sendOtp = async (req,res) => {
 
             case OTP_FOR.LOGIN: {
 
-                const userData = await user.findOne({ email });
+                const userData = await userRepo.findUserByEmail({ email });
 
                 if (!userData) {
                     return res.status(404).json({
@@ -106,7 +92,7 @@ exports.sendOtp = async (req,res) => {
 
             case OTP_FOR.FORGOT_PASSWORD: {
 
-                const userData = await user.findOne({ email });
+                const userData = await userRepo.findUserByEmail({ email });
 
                 if (!userData) {
                     return res.status(404).json({
@@ -126,21 +112,7 @@ exports.sendOtp = async (req,res) => {
         const otp = generateOTP();
         console.log('otp: ', otp);
 
-        await OTP.findOneAndUpdate(
-            { email, otpType },
-            {
-                $set: {
-                    email,
-                    otp,
-                    otpType,
-                    expiresAt: new Date(Date.now() + 1 * 60 * 1000)
-                }
-            },
-            {
-                upsert: true,
-                new: true
-            }
-        );
+        await otpRepo.saveOTP({ email, otp, otpType });
 
         await sendOTPEmail(email, otp);
 
@@ -168,7 +140,7 @@ exports.verifyOtp = async (req, res) => {
             });
         }
 
-        const otpDoc = await OTP.findOne({ email, otp, otpType });
+        const otpDoc = await otpRepo.findOTP({ email, otp, otpType });
 
         if (!otpDoc) {
             return res.status(400).json({
@@ -178,7 +150,7 @@ exports.verifyOtp = async (req, res) => {
 
         // check expiration
         if (otpDoc.expiresAt < new Date()) {
-            await OTP.deleteOne({ _id: otpDoc._id });
+            await otpRepo.deleteOTP({ _id: otpDoc._id });
             return res.status(400).json({
                 message: "OTP expired"
             });
@@ -201,7 +173,7 @@ exports.verifyOtp = async (req, res) => {
                     });
                 }
 
-                const existingUser = await user.findOne({ email });
+                const existingUser = await userRepo.findUserByEmail({ email });
 
                 if (existingUser) {
                     return res.status(400).json({
@@ -211,7 +183,7 @@ exports.verifyOtp = async (req, res) => {
 
                 const hashedPassword = await bcrypt.hash(password.toString(), 10)
                 const hashedConfirmPassword = await bcrypt.hash(confirmPassword.toString(), 10);
-                await user.create({
+                await userRepo.createUser({
                     name,
                     email,
                     password: hashedPassword,
@@ -219,7 +191,7 @@ exports.verifyOtp = async (req, res) => {
                     isVerified: true
                 });
 
-                await OTP.deleteOne({ _id: otpDoc._id });
+                await otpRepo.deleteOTP({ _id: otpDoc._id });
 
                 return res.status(200).json({
                     message: "User verified and registered successfully"
@@ -231,7 +203,7 @@ exports.verifyOtp = async (req, res) => {
             // forgot password
             case OTP_FOR.FORGOT_PASSWORD: {
 
-                const userData = await user.findOne({ email });
+                const userData = await userRepo.findUserByEmail({ email });
 
                 if (!userData) {
                     return res.status(404).json({
@@ -239,7 +211,7 @@ exports.verifyOtp = async (req, res) => {
                     });
                 }
 
-                await OTP.deleteOne({ _id: otpDoc._id });
+                await otpRepo.deleteOTP({ _id: otpDoc._id });
 
                 // generate temporary token 
                 const tempToken = jwt.sign(
@@ -272,8 +244,8 @@ exports.login = async (req, res) => {
     try {
         const body = req.body;
         console.log('body: ', typeof body.password);
-        const userData = await user.findOne({ email: body.email });
-        console.log('userData: ', typeof userData.password);
+        const userData = await userRepo.findUserByEmail({ email: body.email });
+        // console.log('userData: ', typeof userData.password);
         if (!userData) {
             return res.status(404).json({ message: "User not found" })
         }
@@ -285,7 +257,7 @@ exports.login = async (req, res) => {
         const accessToken = await generateAccessToken(userData);
         const refreshToken = await generateRefreshToken(userData);
 
-        await token.create({
+        await tokenRepo.createToken({
             refreshToken,
             userId: userData._id,
             expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000
@@ -323,7 +295,7 @@ exports.refreshToken = async (req, res) => {
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY)
 
         //check token in db 
-        const tokenDoc = await token.findOne({ refreshToken });
+        const tokenDoc = await tokenRepo.findToken({ refreshToken });
 
         if (!tokenDoc) {
             return res.status(403).json({
@@ -333,27 +305,27 @@ exports.refreshToken = async (req, res) => {
 
         //check token is expired or not
         if (tokenDoc.expiresAt < Date.now()) {
-            await token.deleteOne({ _id: tokenDoc._id })
+            await tokenRepo.deleteTokenById({ _id: tokenDoc._id })
             return res.status(403).json({
                 message: "Refresh token expired"
             })
         }
 
-        const userData = await user.findById(decoded.id);
+        const userData = await userRepo.findUserById(decoded.id);
 
         if (!userData) {
             return res.status(404).json({ message: "User not found" });
         }
 
         //deleting old token
-        await token.deleteOne({ _id: tokenDoc._id });
+        await tokenRepo.deleteTokenById({ _id: tokenDoc._id });
 
         // generate new token
         const newRefreshToken = await generateRefreshToken(userData);
         const accessToken = await generateAccessToken(userData);
 
         //save newRefreshToken in db
-        await token.create({
+        await tokenRepo.createToken({
             refreshToken: newRefreshToken,
             userId: userData._id,
             expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000
@@ -390,7 +362,7 @@ exports.logout = async (req, res) => {
         const refreshToken = req.cookies.refreshToken;
 
         if (refreshToken) {
-            await token.deleteOne({ refreshToken })
+            await tokenRepo.deleteToken({ refreshToken })
         }
         res.clearCookie("accessToken");
         res.clearCookie("refreshToken")
@@ -409,7 +381,7 @@ exports.logout = async (req, res) => {
 exports.me = async (req, res) => {
     try {
         const id = req.user;
-        const userData = await user.findById(id).select("-password -confirmPassword");
+        const userData = await userRepo.getUserWithoutPassword(id)
         if (!userData) {
             res.status(404).json({ message: "User not found" })
         }
@@ -427,7 +399,7 @@ exports.me = async (req, res) => {
 }
 
 
-exports.changePassword = async (req,res) => {
+exports.changePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword, confirmPassword, isResetPassword } = req.body;
 
@@ -440,7 +412,7 @@ exports.changePassword = async (req,res) => {
         }
 
         const userId = req.user;
-        const userData = await user.findById(userId);
+        const userData = await userRepo.findUserById(userId);
         if (!userData) return res.status(404).json({ message: "User not found" });
 
         if (!isResetPassword) {
