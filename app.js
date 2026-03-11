@@ -3,7 +3,7 @@ require("dotenv").config();
 const cors = require("cors")
 const cookieParser = require("cookie-parser")
 const db = require("./connections/db")
-const Roters =require("./modules")
+const Roters =require("./routes")
 const app = express();
 
 

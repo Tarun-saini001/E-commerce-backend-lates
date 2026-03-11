@@ -13,7 +13,7 @@ const { OTP_FOR } = require("../config/constants");
 
 
 
-router.post("/register", async (req, res) => {
+exports.register = async (req,res) => {
     try {
         const { name, email, password, confirmPassword } = req.body;
 
@@ -61,10 +61,10 @@ router.post("/register", async (req, res) => {
         console.log("something get wrong", error)
         res.status(500).json({ message: "server error" })
     }
-})
+}
 
 
-router.post("/send-otp", async (req, res) => {
+exports.sendOtp = async (req,res) => {
 
     try {
 
@@ -156,9 +156,9 @@ router.post("/send-otp", async (req, res) => {
             message: "Server error"
         });
     }
-})
+}
 
-router.post("/verifyOtp", async (req, res) => {
+exports.verifyOtp = async (req, res) => {
     try {
         const { name, email, password, confirmPassword, otp, otpType } = req.body;
 
@@ -266,9 +266,9 @@ router.post("/verifyOtp", async (req, res) => {
             message: "Server error"
         });
     }
-});
+}
 
-router.post("/login", async (req, res) => {
+exports.login = async (req, res) => {
     try {
         const body = req.body;
         console.log('body: ', typeof body.password);
@@ -309,9 +309,9 @@ router.post("/login", async (req, res) => {
         console.log("something get wrong", error)
         res.status(500).json({ message: "server error" })
     }
-})
+}
 
-router.post("/refreshToken", async (req, res) => {
+exports.refreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken
         if (!refreshToken || typeof refreshToken !== "string") {
@@ -383,9 +383,9 @@ router.post("/refreshToken", async (req, res) => {
         });
 
     }
-})
+}
 
-router.post("/logout", async (req, res) => {
+exports.logout = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
 
@@ -404,9 +404,9 @@ router.post("/logout", async (req, res) => {
             message: "Logout failed"
         });
     }
-})
+}
 
-router.get("/me", verifyToken, async (req, res) => {
+exports.me = async (req, res) => {
     try {
         const id = req.user;
         const userData = await user.findById(id).select("-password -confirmPassword");
@@ -424,10 +424,10 @@ router.get("/me", verifyToken, async (req, res) => {
             message: "server error"
         })
     }
-})
+}
 
 
-router.post("/change-password", verifyToken, async (req, res) => {
+exports.changePassword = async (req,res) => {
     try {
         const { oldPassword, newPassword, confirmPassword, isResetPassword } = req.body;
 
@@ -465,6 +465,6 @@ router.post("/change-password", verifyToken, async (req, res) => {
         console.error("Change password error:", error);
         res.status(500).json({ message: "Server error" });
     }
-});
+}
 
-module.exports = router;
+
