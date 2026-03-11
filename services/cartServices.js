@@ -114,24 +114,20 @@ exports.updateCart = async (req, res) => {
             return res.status(400).json({ message: "Cart not found" });
         }
         console.log('productId: ', productId);
-        console.log("reach 1");
         const itemIndex = cartData.items.findIndex(
             (item) => item.productId.toString() === productId.toString()
         )
         if (itemIndex === -1) {
             return res.status(404).json({ message: "Product not found in cart" })
         }
-        console.log("reach 2");
 
         //update quantity
         cartData.items[itemIndex].quantity = quantity;
-        console.log("reach 3");
 
         // recalculate total
         cartData.subtotal = cartData.items.reduce(
             (acc, item) => acc + item.price * item.quantity, 0
         )
-        console.log("reach 4");
 
         await cartData.save();
         console.log("cart data after update:", cartData);
@@ -142,6 +138,59 @@ exports.updateCart = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to update the cart",
+        });
+    }
+}
+
+
+exports.removeItem = async (req, res) => {
+    try {
+        const id = req.user;
+        const { productId } = req.params;
+        let cartData = await cartRepo.findCartByUserId(id);
+        console.log("cart data before update:", cartData);
+
+        if (!cartData) {
+            return res.status(400).json({ message: "Cart not found" });
+        }
+        console.log('productId: ', productId);
+
+        const newCartItems = cartData.items.filter(
+            (item) => item.productId.toString() !== productId.toString()
+        )
+
+        if (newCartItems.length === cartData.items.length) {
+            return res.status(404).json({ message: "Product not forund in cart" })
+        }
+        // upadte cart items 
+        cartData.items = newCartItems;
+        // recalculate subtotal
+        cartData.subtotal = cartData.items.reduce(
+            (acc, item) => acc + item.price * item.quantity, 0
+        );
+        await cartData.save();
+
+        return res.status(200).json({
+            data: cart, message: "Product removed from cart successfully",
+        });
+    } catch (error) {
+        console.error("removeItem cart error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to remove item from the cart",
+        });
+    }
+}
+
+
+exports.clearCart = async (req,res) => {
+    try {
+        
+    } catch (error) {
+        console.error("clear cart error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to clear the cart",
         });
     }
 }
