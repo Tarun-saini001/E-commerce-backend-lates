@@ -24,7 +24,7 @@ exports.register = async (req, res) => {
             return res.status(400).json({ message: "Passwords do not match" });
         }
 
-        const existingUser = await userRepo.findUserByEmail({ email });
+        const existingUser = await userRepo.findUserByEmail(email);
 
         console.log('existingUser: ', existingUser);
         if (existingUser) {
@@ -45,7 +45,7 @@ exports.register = async (req, res) => {
 
     } catch (error) {
         console.log("something get wrong", error)
-        res.status(500).json({ message: "server error" })
+        return res.status(500).json({ message: "server error" })
     }
 }
 
@@ -66,7 +66,7 @@ exports.sendOtp = async (req, res) => {
 
             case OTP_FOR.REGISTER: {
 
-                const existingUser = await userRepo.findUserByEmail({ email });
+                const existingUser = await userRepo.findUserByEmail(email);
 
                 if (existingUser) {
                     return res.status(400).json({
@@ -79,7 +79,7 @@ exports.sendOtp = async (req, res) => {
 
             case OTP_FOR.LOGIN: {
 
-                const userData = await userRepo.findUserByEmail({ email });
+                const userData = await userRepo.findUserByEmail(email);
 
                 if (!userData) {
                     return res.status(404).json({
@@ -92,7 +92,7 @@ exports.sendOtp = async (req, res) => {
 
             case OTP_FOR.FORGOT_PASSWORD: {
 
-                const userData = await userRepo.findUserByEmail({ email });
+                const userData = await userRepo.findUserByEmail(email);
 
                 if (!userData) {
                     return res.status(404).json({
@@ -124,7 +124,7 @@ exports.sendOtp = async (req, res) => {
 
         console.log("Send OTP error:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             message: "Server error"
         });
     }
@@ -150,7 +150,7 @@ exports.verifyOtp = async (req, res) => {
 
         // check expiration
         if (otpDoc.expiresAt < new Date()) {
-            await otpRepo.deleteOTP({ _id: otpDoc._id });
+            await otpRepo.deleteOTP(otpDoc._id);
             return res.status(400).json({
                 message: "OTP expired"
             });
@@ -173,7 +173,7 @@ exports.verifyOtp = async (req, res) => {
                     });
                 }
 
-                const existingUser = await userRepo.findUserByEmail({ email });
+                const existingUser = await userRepo.findUserByEmail(email);
 
                 if (existingUser) {
                     return res.status(400).json({
@@ -191,7 +191,7 @@ exports.verifyOtp = async (req, res) => {
                     isVerified: true
                 });
 
-                await otpRepo.deleteOTP({ _id: otpDoc._id });
+                await otpRepo.deleteOTP(otpDoc._id);
 
                 return res.status(200).json({
                     message: "User verified and registered successfully"
@@ -203,7 +203,7 @@ exports.verifyOtp = async (req, res) => {
             // forgot password
             case OTP_FOR.FORGOT_PASSWORD: {
 
-                const userData = await userRepo.findUserByEmail({ email });
+                const userData = await userRepo.findUserByEmail(email);
 
                 if (!userData) {
                     return res.status(404).json({
@@ -211,7 +211,7 @@ exports.verifyOtp = async (req, res) => {
                     });
                 }
 
-                await otpRepo.deleteOTP({ _id: otpDoc._id });
+                await otpRepo.deleteOTP(otpDoc._id);
 
                 // generate temporary token 
                 const tempToken = jwt.sign(
@@ -244,7 +244,7 @@ exports.login = async (req, res) => {
     try {
         const body = req.body;
         console.log('body: ', typeof body.password);
-        const userData = await userRepo.findUserByEmail({ email: body.email });
+        const userData = await userRepo.findUserByEmail(body.email);
         // console.log('userData: ', typeof userData.password);
         if (!userData) {
             return res.status(404).json({ message: "User not found" })
@@ -257,11 +257,11 @@ exports.login = async (req, res) => {
         const accessToken = await generateAccessToken(userData);
         const refreshToken = await generateRefreshToken(userData);
 
-        await tokenRepo.createToken({
+        await tokenRepo.createToken(
             refreshToken,
-            userId: userData._id,
-            expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000
-        })
+            userData._id,
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+        )
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
@@ -276,10 +276,10 @@ exports.login = async (req, res) => {
             sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
-        res.status(200).json({ message: "Login successful" })
+        return res.status(200).json({ message: "Login successful" })
     } catch (error) {
         console.log("something get wrong", error)
-        res.status(500).json({ message: "server error" })
+        return res.status(500).json({ message: "server error" })
     }
 }
 
@@ -295,7 +295,7 @@ exports.refreshToken = async (req, res) => {
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY)
 
         //check token in db 
-        const tokenDoc = await tokenRepo.findToken({ refreshToken });
+        const tokenDoc = await tokenRepo.findToken(refreshToken);
 
         if (!tokenDoc) {
             return res.status(403).json({
@@ -305,7 +305,7 @@ exports.refreshToken = async (req, res) => {
 
         //check token is expired or not
         if (tokenDoc.expiresAt < Date.now()) {
-            await tokenRepo.deleteTokenById({ _id: tokenDoc._id })
+            await tokenRepo.deleteTokenById(tokenDoc._id)
             return res.status(403).json({
                 message: "Refresh token expired"
             })
@@ -318,18 +318,18 @@ exports.refreshToken = async (req, res) => {
         }
 
         //deleting old token
-        await tokenRepo.deleteTokenById({ _id: tokenDoc._id });
+        await tokenRepo.deleteTokenById(tokenDoc._id);
 
         // generate new token
         const newRefreshToken = await generateRefreshToken(userData);
         const accessToken = await generateAccessToken(userData);
 
         //save newRefreshToken in db
-        await tokenRepo.createToken({
-            refreshToken: newRefreshToken,
-            userId: userData._id,
-            expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000
-        })
+        await tokenRepo.createToken(
+            newRefreshToken,
+            userData._id,
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+        )
 
 
         res.cookie("refreshToken", newRefreshToken, {
@@ -362,17 +362,17 @@ exports.logout = async (req, res) => {
         const refreshToken = req.cookies.refreshToken;
 
         if (refreshToken) {
-            await tokenRepo.deleteToken({ refreshToken })
+            await tokenRepo.deleteToken(refreshToken)
         }
         res.clearCookie("accessToken");
         res.clearCookie("refreshToken")
 
-        res.status(200).json({ message: "Logout successful" })
+        return res.status(200).json({ message: "Logout successful" })
 
     } catch (error) {
         console.log("logout error:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             message: "Logout failed"
         });
     }
@@ -383,16 +383,16 @@ exports.me = async (req, res) => {
         const id = req.user;
         const userData = await userRepo.getUserWithoutPassword(id)
         if (!userData) {
-            res.status(404).json({ message: "User not found" })
+            return res.status(404).json({ message: "User not found" })
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             data: userData,
             message: "User fetched successfully"
         })
     } catch (error) {
         console.log("getUser error", error);
-        res.status(500).json({
+        return res.status(500).json({
             message: "server error"
         })
     }
@@ -432,10 +432,10 @@ exports.changePassword = async (req, res) => {
         userData.password = hashedPassword;
         await userData.save();
 
-        res.status(200).json({ message: isResetPassword ? "Password reset successfully" : "Password changed successfully" });
+        return res.status(200).json({ message: isResetPassword ? "Password reset successfully" : "Password changed successfully" });
     } catch (error) {
         console.error("Change password error:", error);
-        res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ message: "Server error" });
     }
 }
 

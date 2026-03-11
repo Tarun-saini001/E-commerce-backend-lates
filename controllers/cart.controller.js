@@ -8,3 +8,21 @@ exports.addToCart = async (req, res) => {
         res.status(error.status || 500).json({ message: error.message });
     }
 };
+
+exports.getCart= async (req,res) => {
+    try {
+        const data = await cartServices.getCart(req,res);
+         res.status(200).json(data)
+    } catch (error) {
+         res.status(error.status || 500).json ({message:error.message});
+    }
+}
+
+exports.updateCart= async (req,res) => {
+    try {
+        const data = await cartServices.updateCart(req,res);
+         res.status(200).json(data)
+    } catch (error) {
+         res.status(error.status || 500).json ({message:error.message});
+    }
+}

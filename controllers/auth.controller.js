@@ -50,7 +50,7 @@ exports.logout = async (req, res) => {
         const data = await authService.logout(req,res);
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -59,7 +59,7 @@ exports.getUser = async (req, res) => {
         const data = await authService.me(req,res);
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
 
@@ -68,6 +68,6 @@ exports.changePassword = async (req, res) => {
         const data = await authService.changePassword(req,res);
         res.status(200).json(data);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(error.status || 500).json({ message: error.message });
     }
 };
