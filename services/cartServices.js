@@ -19,9 +19,11 @@ exports.addToCart = async (req, res) => {
         } = req.body;
 
         if (!id || !title || !price) {
-            return res.status(400).json({
+            return {
+                status: "RecordNotFound",
                 message: "Product data missing",
-            });
+            }
+
         }
 
         let cartData = await cartRepo.findCartByUserId(userId);
@@ -60,6 +62,7 @@ exports.addToCart = async (req, res) => {
         await cartData.save();
 
         return {
+            status: "Success",
             message: "Product added to cart",
             data: cartData,
         };
@@ -78,15 +81,19 @@ exports.getCart = async (req, res) => {
         console.log('cartData: ', cartData);
 
         if (!cartData) {
-            return res.status(200).json({
+            return {
+                status: "Success",
+                message: "Your cart is empty",
                 data: {
                     items: [],
                     subtotal: 0,
                 },
-            });
+            }
+
         }
 
         return {
+            status: "Success",
             messsage: "Cart fetched successfully",
             data: cartData,
         };
@@ -107,21 +114,30 @@ exports.updateCart = async (req, res) => {
         const { quantity } = req.body;
 
         if (!quantity || quantity < 1) {
-            return res.status(400).json({ message: "Quantity must be at least 1", });
+            return {
+                status: "Validation",
+                message: "Quantity must be at least 1"
+            }
         }
 
         let cartData = await cartRepo.findCartByUserId(id);
         console.log("cart data before update:", cartData);
 
         if (!cartData) {
-            return res.status(400).json({ message: "Cart not found" });
+            return {
+                status: "RecordNotFound",
+                message: "Cart not found"
+            }
         }
         console.log('productId: ', productId);
         const itemIndex = cartData.items.findIndex(
             (item) => item.id.toString() === productId.toString()
         )
         if (itemIndex === -1) {
-            return res.status(404).json({ message: "Product not found in cart" })
+            return {
+                status: "RecordNotFound",
+                message: "Product not found in cart"
+            }
         }
 
         //update quantity
@@ -135,6 +151,7 @@ exports.updateCart = async (req, res) => {
         await cartData.save();
         console.log("cart data after update:", cartData);
         return {
+            status:"Success",
             data: cartData,
             message: "Cart update successfully"
         }
@@ -155,7 +172,10 @@ exports.removeItem = async (req, res) => {
         let cartData = await cartRepo.findCartByUserId(id);
 
         if (!cartData) {
-            return res.status(400).json({ message: "Cart not found" });
+            return {
+                status: "RecordNotFound",
+                message: "Cart not found"
+            }
         }
         console.log('productId: ', productId);
 
@@ -164,7 +184,10 @@ exports.removeItem = async (req, res) => {
         )
 
         if (newCartItems.length === cartData.items.length) {
-            return res.status(404).json({ message: "Product not forund in cart" })
+            return {
+                status: "RecordNotFound",
+                message: "Product not found in cart"
+            }
         }
         // upadte cart items 
         cartData.items = newCartItems;
@@ -175,6 +198,7 @@ exports.removeItem = async (req, res) => {
         await cartData.save();
 
         return {
+            status:"Success",
             data: cartData,
             message: "Product removed from cart successfully",
         };
@@ -193,7 +217,10 @@ exports.clearCart = async (req, res) => {
         let cartData = await cartRepo.findCartByUserId(id);
 
         if (!cartData) {
-            return res.status(400).json({ message: "Cart not found" });
+            return {
+                status: "RecordNotFound",
+                message: "Cart not found"
+            }
         }
 
         // clear items and  subtotal
@@ -203,6 +230,7 @@ exports.clearCart = async (req, res) => {
         await cartData.save();
 
         return {
+            status:"Success",
             message: "Cart cleared successfully",
             data: cartData,
         };

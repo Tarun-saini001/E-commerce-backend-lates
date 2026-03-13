@@ -3,45 +3,60 @@ const cartServices = require("../services/cartServices");
 exports.addToCart = async (req, res) => {
     try {
         const data = await cartServices.addToCart(req);
-        res.status(200).json(data);
+
+        if (data.status == "RecordNotFound") { return res.status(400).json({ message: data.message }) }
+        if (data.status == "Success") { res.status(200).json({ message: data.message, data: data.data }); }
+
     } catch (error) {
         res.status(error.status || 500).json({ message: error.message });
     }
 };
 
-exports.getCart= async (req,res) => {
+exports.getCart = async (req, res) => {
     try {
         const data = await cartServices.getCart(req);
-         res.status(200).json(data)
+
+        if (data.status == "Success") { res.status(200).json({ message: data.message, data: data.data }); }
+
     } catch (error) {
-         res.status(error.status || 500).json ({message:error.message});
+        res.status(error.status || 500).json({ message: error.message });
     }
 }
 
-exports.updateCart= async (req,res) => {
+exports.updateCart = async (req, res) => {
     try {
         const data = await cartServices.updateCart(req);
-         res.status(200).json(data)
+
+        if (data.status == "Validation") { res.status(400).json({ message: data.message }) }
+        if (data.status == "RecordNotFound") { return res.status(404).json({ message: data.message }) }
+        if (data.status == "Success") { res.status(200).json({ message: data.message, data: data.data }); }
+
     } catch (error) {
-         res.status(error.status || 500).json ({message:error.message});
+        res.status(error.status || 500).json({ message: error.message });
     }
 }
 
 
-exports.removeItem= async (req,res) => {
+exports.removeItem = async (req, res) => {
     try {
         const data = await cartServices.removeItem(req);
-         res.status(200).json(data)
+
+        if (data.status == "RecordNotFound") { return res.status(404).json({ message: data.message }) }
+        if (data.status == "Success") { res.status(200).json({ message: data.message, data: data.data }); }
+
     } catch (error) {
-         res.status(error.status || 500).json ({message:error.message});
+        res.status(error.status || 500).json({ message: error.message });
     }
 }
 
-exports.clearCart= async (req,res) => {
+exports.clearCart = async (req, res) => {
     try {
         const data = await cartServices.clearCart(req);
-         res.status(200).json(data)
+
+        if (data.status == "RecordNotFound") { return res.status(404).json({ message: data.message }) }
+        if (data.status == "Success") { res.status(200).json({ message: data.message, data: data.data }); }
+
     } catch (error) {
-         res.status(error.status || 500).json ({message:error.message});
+        res.status(error.status || 500).json({ message: error.message });
     }
 }
