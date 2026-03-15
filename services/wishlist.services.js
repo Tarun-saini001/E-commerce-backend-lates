@@ -38,3 +38,34 @@ exports.addToWishlist = async (req, res) => {
         });
     }
 };
+
+exports.getWishlist = async (req, res) => {
+    try {
+        const userId = req.user;
+
+        const wishlist = await findWishlistByUserId(userId);
+
+        if (!wishlist) {
+            return {
+                status: "Success",
+                message: "Wishlist fetched successfully",
+                data: {
+                    items: []
+                }
+            };
+        }
+
+        return {
+            status: "Success",
+            message: "Wishlist fetched successfully",
+            data: wishlist
+        };
+
+    } catch (error) {
+        console.error("Get wishlist error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch wishlist",
+        });
+    }
+};
