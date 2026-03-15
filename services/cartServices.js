@@ -1,9 +1,8 @@
 const verifyToken = require("../middlewares/verifyToken");
 const cart = require("../models/cart");
-const router = require("express").Router();
 const cartRepo = require("../repository/cart.repository")
 
-exports.addToCart = async (req, res) => {
+exports.addToCart = async (req) => {
     try {
         console.log('req.user: ', req.user);
         const userId = req.user;
@@ -74,7 +73,7 @@ exports.addToCart = async (req, res) => {
     }
 }
 
-exports.getCart = async (req, res) => {
+exports.getCart = async (req) => {
     try {
         const id = req.user;
         const cartData = await cartRepo.findCartByUserId(id)
@@ -107,7 +106,7 @@ exports.getCart = async (req, res) => {
     }
 }
 
-exports.updateCart = async (req, res) => {
+exports.updateCart = async (req) => {
     try {
         const id = req.user
         const { productId } = req.params;
@@ -165,7 +164,7 @@ exports.updateCart = async (req, res) => {
 }
 
 
-exports.removeItem = async (req, res) => {
+exports.removeItem = async (req) => {
     try {
         const id = req.user;
         const { productId } = req.params;
@@ -211,7 +210,7 @@ exports.removeItem = async (req, res) => {
 }
 
 
-exports.clearCart = async (req, res) => {
+exports.clearCart = async (req) => {
     try {
         const id = req.user;
         let cartData = await cartRepo.findCartByUserId(id);
