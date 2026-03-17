@@ -31,7 +31,7 @@ const {z} = require("zod")
  const billingSchema = z.object({
     name: z.string()
         .min(2, { message: "Name is required" })
-        .max(100),
+        .max(100).optional(),
 
     country: z.string()
         .min(2, { message: "Country is required" }),
@@ -50,40 +50,24 @@ const {z} = require("zod")
         .max(300),
 
     phone: z.string()
-        .regex(/^[6-9]\d{9}$/, { message: "Invalid phone number" }), // Indian format
+        .regex(/^\d{10}$/, { message: "Invalid phone number" }).optional(), // Indian format
 
     email: z.string()
-        .email({ message: "Invalid email address" }),
+        .email({ message: "Invalid email address" }).optional(),
 });
 
 
 // Main Order Schema
  const orderSchema = z.object({
-    user: z.string()
-        .regex(/^[0-9a-fA-F]{24}$/, { message: "Invalid user ID" }), // Mongo ObjectId
 
-    billingDetails: billingSchema,
+    billingDetails: billingSchema.optional(),
 
     items: z.array(orderItemSchema)
-        .min(1, { message: "At least one item is required" }),
+        .min(1, { message: "At least one item is required" }).optional(),
 
     shippingMethod: z.enum(["upi", "cod"], {
         errorMap: () => ({ message: "Invalid shipping method" }),
     }).default("cod"),
-
-    subtotal: z.number()
-        .nonnegative({ message: "Subtotal cannot be negative" }),
-
-    shippingFee: z.number()
-        .nonnegative({ message: "Shipping fee cannot be negative" })
-        .default(15),
-
-    tax: z.number()
-        .nonnegative({ message: "Tax cannot be negative" })
-        .default(0),
-
-    total: z.number()
-        .nonnegative({ message: "Total cannot be negative" }),
 
     orderStatus: z.enum(["pending", "processing", "completed"])
         .default("pending"),

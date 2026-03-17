@@ -2,27 +2,27 @@ const mongoose = require("mongoose");
 
 const orderItemSchema = new mongoose.Schema(
     {
-        id: { type: Number, required: true },
-        title: { type: String, required: true },
-        price: { type: Number, required: true },
+        id: { type: Number },
+        title: { type: String},
+        price: { type: Number },
         thumbnail: { type: String },
         brand: { type: String },
         category: { type: String },
-        quantity: { type: Number, required: true, min: 1 },
+        quantity: { type: Number },
     },
     { _id: false }
 );
 
 const billingSchema = new mongoose.Schema(
     {
-        name: { type: String, required: true },
-        country: { type: String, required: true },
-        city: { type: String, required: true },
-        district: { type: String, required: true },
-        postalCode: { type: String, required: true },
-        address: { type: String, required: true },
-        phone: { type: String, required: true },
-        email: { type: String, required: true },
+        name: { type: String},
+        country: { type: String},
+        city: { type: String},
+        district: { type: String},
+        postalCode: { type: String },
+        address: { type: String},
+        phone: { type: String},
+        email: { type: String},
     },
     { _id: false }
 );
@@ -30,17 +30,17 @@ const billingSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
     {
-        user: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true, },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
 
         billingDetails: billingSchema,
 
         items: [orderItemSchema],
 
         shippingMethod: { type: String, enum: ["upi", "cod"], default: "cod", },
-        subtotal: { type: Number, required: true, },
+        subtotal: { type: Number},
         shippingFee: { type: Number, default: 15, },
         tax: { type: Number, default: 0, },
-        total: { type: Number, required: true, },
+        total: { type: Number},
 
         orderStatus: {
             type: String,

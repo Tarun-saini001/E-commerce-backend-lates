@@ -9,6 +9,7 @@ const app = express();
 
 
 db.connectDatabase();
+app.use(express.json());
 app.use(cookieParser())
 
 app.use(cors({
@@ -16,7 +17,6 @@ app.use(cors({
     credentials:true
 }))
 
-app.use(express.json());
 app.use("/service",Roters)
 
 app.listen(process.env.PORT, ()=>{
