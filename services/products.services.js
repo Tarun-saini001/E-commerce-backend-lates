@@ -3,7 +3,14 @@ const Product = require("../models/product");
 
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+     const { category } = req.query;
+
+    let filter = {};
+
+    if (category) {
+      filter.categoryName = category;
+    }
+    const products = await Product.find(filter);
 
     return{
       status: "Success",
