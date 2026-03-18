@@ -123,10 +123,13 @@ exports.sendOtp = async (req, res) => {
                 }
         }
 
-        const otp = generateOTP();
-        console.log('otp: ', otp);
+        const generatedOTP = generateOTP();
+        const otp = String(generatedOTP);
 
-        await otpRepo.saveOTP({ email, otp, otpType });
+        console.log('otp: ', otp);
+        console.log('otp: ', typeof otp);
+
+        await otpRepo.saveOTP(email, otp, otpType );
 
         await sendOTPEmail(email, otp);
 
@@ -157,7 +160,7 @@ exports.verifyOtp = async (req, res) => {
 
         }
 
-        const otpDoc = await otpRepo.findOTP({ email, otp, otpType });
+        const otpDoc = await otpRepo.findOTP( email, otp, otpType );
 
         if (!otpDoc) {
             return {
@@ -469,20 +472,20 @@ exports.changePassword = async (req, res) => {
             return {
                 status: "Validation",
                 message: "New password and confirm password are required"
-            } 
+            }
         }
 
         if (newPassword !== confirmPassword) {
-             return {
+            return {
                 status: "Validation",
                 message: "Passwords do not match"
-            } 
+            }
         }
 
         const userId = req.user;
         const userData = await userRepo.findUserById(userId);
-        if (!userData){
-              return {
+        if (!userData) {
+            return {
                 status: "RecordNotFound",
                 message: "User not found"
             }
@@ -492,18 +495,18 @@ exports.changePassword = async (req, res) => {
             // normal password change, validate old password
             if (!oldPassword) {
                 return {
-                status: "Validation",
-                message: "Old password is required"
-            } 
-               
+                    status: "Validation",
+                    message: "Old password is required"
+                }
+
             }
 
             const isMatch = await bcrypt.compare(oldPassword, userData.password);
             if (!isMatch) {
                 return {
-                status: "Validation",
-                message: "Old password is incorrect"
-            } 
+                    status: "Validation",
+                    message: "Old password is incorrect"
+                }
             }
         }
 
@@ -512,10 +515,10 @@ exports.changePassword = async (req, res) => {
         userData.password = hashedPassword;
         await userData.save();
 
-        return { 
-            status:"Success",
+        return {
+            status: "Success",
             message: isResetPassword ? "Password reset successfully" : "Password changed successfully"
-         };
+        };
     } catch (error) {
         console.error("Change password error:", error);
         return res.status(500).json({ message: "Server error" });

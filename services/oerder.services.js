@@ -76,3 +76,55 @@ exports.createOrder = async (req) => {
         data: order,
     };
 };
+
+
+
+exports.getOrders = async (req) => {
+    const userId = req.user; 
+
+    
+    const userData = await userRepository.findUserById(userId);
+    if (!userData) {
+        return {
+            status: "RecordNotFound",
+            message: "User not found",
+        };
+    }
+
+  
+    const orders = await orderRepository.findOrdersByUserId(userId);
+
+    return {
+        status: "Success",
+        message: "Orders fetched successfully",
+        data: orders,
+    };
+};
+
+
+exports.getOrderById = async (req) => {
+    const userId = req.user;
+    const orderId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        return {
+            status: "Validation",
+            message: "Invalid order ID",
+        };
+    }
+
+    const order = await orderRepository.findOrderById(orderId);
+
+    if (!order || order.user.toString() !== userId.toString()) {
+        return {
+            status: "RecordNotFound",
+            message: "Order not found",
+        };
+    }
+
+    return {
+        status: "Success",
+        message: "Order fetched successfully",
+        data: order,
+    };
+};

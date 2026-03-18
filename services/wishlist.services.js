@@ -9,7 +9,7 @@ exports.addToWishlist = async (req, res) => {
         let wishlist = await findWishlistByUserId(userId);
 
         if (!wishlist) {
-            wishlist = await creatWishlist(productId)
+            wishlist = await creatWishlist(userId,productId)
         } else {
             const exists = wishlist.items.find(
                 (item) => Number(item.productId) === Number(productId)
@@ -106,6 +106,7 @@ exports.removeWishlistItem = async (req, res) => {
 exports.toggleWishlist = async (req, res) => {
     try {
         const userId = req.user;
+        console.log('userId: ', userId);
         const { productId } = req.body;
 
         let wishlist = await findWishlistByUserId(userId);
