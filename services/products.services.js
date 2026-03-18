@@ -36,3 +36,20 @@ exports.getProductById = async (req, res) => {
     res.status(500).json({ message: "Error fetching product" });
   }
 };
+
+exports.createProduct = async (req, res) => {
+  try {
+    const product = await Product.create(req.body);
+    console.log('product: ', product);
+
+    return{
+      status: "Success",
+      message:"Product created successfully",
+      data: product,
+    };
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to create product",
+    });
+  }
+};
