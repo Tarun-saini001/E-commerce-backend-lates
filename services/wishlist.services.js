@@ -113,7 +113,7 @@ exports.toggleWishlist = async (req, res) => {
 
         // create wishlist if not exists
         if (!wishlist) {
-            wishlist = await creatWishlist(productId)
+            wishlist = await creatWishlist(userId,productId)
             return {
                 status: "Success",
                 message: "Product added to wishlist",
@@ -139,7 +139,9 @@ exports.toggleWishlist = async (req, res) => {
 
         } else {
             // add product
+            console.log("reach 1")
             await addItem(userId,productId);
+            console.log("reach 2")
 
             const updatedWishlist = await findWishlistByUserId(userId);
 

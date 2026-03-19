@@ -8,6 +8,7 @@ const cartItemSchema = new mongoose.Schema(
         thumbnail: { type: String, },
         brand: { type: String, },
         category: { type: String, },
+        categoryName:{type:String},
         quantity: { type: Number, default: 1, min: 1, },
     },
     { _id: false }

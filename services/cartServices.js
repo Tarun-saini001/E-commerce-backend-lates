@@ -14,9 +14,11 @@ exports.addToCart = async (req) => {
             thumbnail,
             brand,
             category,
+            categoryName,
             quantity = 1
         } = req.body;
-
+        
+        console.log('categoryName,: ', categoryName);
         if (!id || !title || !price) {
             return {
                 status: "RecordNotFound",
@@ -49,6 +51,7 @@ exports.addToCart = async (req) => {
                 thumbnail,
                 brand,
                 category,
+                categoryName,
                 quantity,
             });
         }
@@ -59,6 +62,7 @@ exports.addToCart = async (req) => {
             0
         );
         await cartData.save();
+        console.log('cartData: after save', cartData);
 
         return {
             status: "Success",
