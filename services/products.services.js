@@ -20,7 +20,9 @@ exports.getProducts = async (req, res) => {
             data: products,
         };
     } catch (error) {
-        res.status(500).json({ message: "Error fetching product" });
+        return {
+            status: "Error", message: "Error fetching product"
+        };
 
     }
 };
