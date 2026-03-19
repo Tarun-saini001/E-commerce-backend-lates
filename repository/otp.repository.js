@@ -14,7 +14,7 @@ exports.saveOTP = async (email, otp, otpType) => {
             },
             {
                 upsert: true,
-                new: true
+                returnDocument: "after"
             }
         );
     } catch (error) {
