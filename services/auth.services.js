@@ -46,7 +46,7 @@ exports.register = async (req, res) => {
         await otpRepo.saveOTP({ email, otp, otpType: OTP_FOR.REGISTER });
 
 
-        await sendOTPEmail(email, otp)
+        // await sendOTPEmail(email, otp)
         return {
             status: "success",
             message: "OTP sent to your email"
@@ -129,9 +129,10 @@ exports.sendOtp = async (req, res) => {
         console.log('otp: ', otp);
         console.log('otp: ', typeof otp);
 
-        await otpRepo.saveOTP(email, otp, otpType );
-
+        await otpRepo.saveOTP(email, otp, otpType);
+        console.log("reach 1");
         await sendOTPEmail(email, otp);
+        console.log("reach 2");
 
         return {
             status: "Success",
@@ -160,7 +161,7 @@ exports.verifyOtp = async (req, res) => {
 
         }
 
-        const otpDoc = await otpRepo.findOTP( email, otp, otpType );
+        const otpDoc = await otpRepo.findOTP(email, otp, otpType);
 
         if (!otpDoc) {
             return {
