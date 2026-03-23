@@ -54,7 +54,10 @@ exports.getProductById = async (req, res) => {
             data: product,
         };
     } catch (error) {
-        res.status(500).json({ message: "Error fetching product" });
+        console.log('error: ', error.message);
+        return {
+            status: "Error", message: "Error fetching product by id"
+        };
     }
 };
 
