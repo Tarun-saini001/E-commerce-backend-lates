@@ -8,7 +8,7 @@ exports.addToCart = async (req) => {
         const userId = req.user;
 
         const {
-            id,
+            _id,
             title,
             price,
             thumbnail,
@@ -19,7 +19,7 @@ exports.addToCart = async (req) => {
         } = req.body;
         
         console.log('categoryName,: ', categoryName);
-        if (!id || !title || !price) {
+        if (!_id || !title || !price) {
             return {
                 status: "RecordNotFound",
                 message: "Product data missing",
@@ -38,14 +38,14 @@ exports.addToCart = async (req) => {
         }
 
         const existingItem = cartData.items.find(
-            (item) => Number(item.id) === Number(id)
+            (item) => item._id === _id
         );
 
         if (existingItem) {
             existingItem.quantity += quantity;
         } else {
             cartData.items.push({
-                id: Number(id),
+                _id,
                 title,
                 price,
                 thumbnail,
