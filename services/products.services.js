@@ -21,6 +21,7 @@ exports.getProducts = async (req, res) => {
             data: products,
         };
     } catch (error) {
+        console.log('error: get products service error ', error.message);
         return {
             status: "Error", message: "Error fetching product"
         };
