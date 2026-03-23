@@ -216,31 +216,29 @@ exports.updateCart = async (req) => {
 
         const populatedCart = await cartData.populate("items.productId");
 
-        const transformedItems = cartData.items.map((item) => {
-            const product = item.productId;
-
-            return {
-                _id: product._id,
-                title: product.title,
-                price: product.price,
-                thumbnail: product.thumbnail,
-                brand: product.brand,
-                category: product.category,
-                categoryName: product.categoryName,
-                quantity: item.quantity,
-            };
-        });
-
-        const subtotal = transformedItems.reduce(
-            (acc, item) => acc + item.price * item.quantity,
+        cartData.subtotal = populatedCart.items.reduce(
+            (acc, item) => acc + item.productId.price * item.quantity,
             0
         );
+
+        await cartData.save();
+
+        const transformedItems = populatedCart.items.map((item) => ({
+            _id: item.productId._id,
+            title: item.productId.title,
+            price: item.productId.price,
+            thumbnail: item.productId.thumbnail,
+            brand: item.productId.brand,
+            category: item.productId.category,
+            categoryName: item.productId.categoryName,
+            quantity: item.quantity,
+        }));
 
         return {
             status: "Success",
             data: {
                 items: transformedItems,
-                subtotal,
+                subtotal: cartData.subtotal,
             },
         };
     } catch (error) {
@@ -279,74 +277,34 @@ exports.removeItem = async (req) => {
         }
         // upadte cart items 
         cartData.items = newCartItems;
-        // recalculate subtotal
-        cartData.subtotal = cartData.items.reduce(
-            (acc, item) => acc + item.price * item.quantity, 0
-        );
-        await cartData.save();
-
         const populatedCart = await cartData.populate("items.productId");
-        
-        const transformedItems = cartData.items.map((item) => {
-            const product = item.productId;
 
-            return {
-                _id: product._id,
-                title: product.title,
-                price: product.price,
-                thumbnail: product.thumbnail,
-                brand: product.brand,
-                category: product.category,
-                categoryName: product.categoryName,
-                quantity: item.quantity,
-            };
-        });
-
-        const subtotal = transformedItems.reduce(
-            (acc, item) => acc + item.price * item.quantity,
+        cartData.subtotal = populatedCart.items.reduce(
+            (acc, item) => acc + item.productId.price * item.quantity,
             0
         );
+
+        await cartData.save();
+
+        const transformedItems = populatedCart.items.map((item) => ({
+            _id: item.productId._id,
+            title: item.productId.title,
+            price: item.productId.price,
+            thumbnail: item.productId.thumbnail,
+            brand: item.productId.brand,
+            category: item.productId.category,
+            categoryName: item.productId.categoryName,
+            quantity: item.quantity,
+        }));
 
         return {
             status: "Success",
             data: {
                 items: transformedItems,
-                subtotal,
+                subtotal: cartData.subtotal,
             },
         };
 
-    } catch (error) {
-        console.error("removeItem cart error:", error);
-        return {
-            status: "Error", message: "Failed to remove item from the cart"
-        };
-    }
-}
-
-
-exports.clearCart = async (req) => {
-    try {
-        const id = req.user;
-        let cartData = await cartRepo.findCartByUserId(id);
-
-        if (!cartData) {
-            return {
-                status: "RecordNotFound",
-                message: "Cart not found"
-            }
-        }
-
-        // clear items and  subtotal
-        cartData.items = [];
-        cartData.subtotal = 0;
-
-        await cartData.save();
-
-        return {
-            status: "Success",
-            message: "Cart cleared successfully",
-            data: cartData,
-        };
     } catch (error) {
         console.error("clear cart error:", error);
         return {
