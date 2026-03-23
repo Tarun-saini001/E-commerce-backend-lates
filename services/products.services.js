@@ -31,15 +31,15 @@ exports.getProducts = async (req, res) => {
 exports.getProductById = async (req, res) => {
     try {
         const { id } = req.params
-        const product = await Product.findById(id);
-
-
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return {
                 status: "Validation",
                 message: "Invalid ID format"
             };
         }
+        const product = await Product.findById(id);
+
+
 
         if (!product) {
             return {
