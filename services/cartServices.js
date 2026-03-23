@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const verifyToken = require("../middlewares/verifyToken");
 const cart = require("../models/cart");
 const cartRepo = require("../repository/cart.repository")
