@@ -7,25 +7,34 @@ exports.addToCart = async (req) => {
         console.log('req.user: ', req.user);
         const userId = req.user;
 
-        const {
-            _id,
-            title,
-            price,
-            thumbnail,
-            brand,
-            category,
-            categoryName,
-            quantity = 1
-        } = req.body;
+        // const {
+        //     _id,
+        //     title,
+        //     price,
+        //     thumbnail,
+        //     brand,
+        //     category,
+        //     categoryName,
+        //     quantity = 1
+        // } = req.body;
 
-        console.log('categoryName,: ', categoryName);
-        if (!_id || !title || !price) {
+        const { productId, quantity = 1 } = req.body;
+
+        if (!productId) {
             return {
-                status: "RecordNotFound",
-                message: "Product data missing",
-            }
-
+                status: "Validation",
+                message: "Product ID is required",
+            };
         }
+
+        // console.log('categoryName,: ', categoryName);
+        // if (!_id || !title || !price) {
+        //     return {
+        //         status: "RecordNotFound",
+        //         message: "Product data missing",
+        //     }
+
+        // }
 
         let cartData = await cartRepo.findCartByUserId(userId);
         console.log('cartData: ', cartData);
@@ -38,29 +47,23 @@ exports.addToCart = async (req) => {
         }
 
         const existingItem = cartData.items.find(
-            (item) => item._id === _id
+            (item) => item.productId.toString() === productId
         );
 
         if (existingItem) {
             existingItem.quantity += quantity;
         } else {
             cartData.items.push({
-                _id,
-                title,
-                price,
-                thumbnail,
-                brand,
-                category,
-                categoryName,
+                productId,
                 quantity,
             });
         }
 
         // recalculate subtotal
-        cartData.subtotal = cartData.items.reduce(
-            (total, item) => total + item.price * item.quantity,
-            0
-        );
+        // cartData.subtotal = cartData.items.reduce(
+        //     (total, item) => total + item.price * item.quantity,
+        //     0
+        // );
         await cartData.save();
         console.log('cartData: after save', cartData);
 
@@ -81,7 +84,10 @@ exports.addToCart = async (req) => {
 exports.getCart = async (req) => {
     try {
         const id = req.user;
-        const cartData = await cartRepo.findCartByUserId(id)
+
+        const cartData = await cart.findOne({ user: userId })
+            .populate("items.productId");
+
         console.log('cartData: ', cartData);
 
         if (!cartData) {
