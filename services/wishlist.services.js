@@ -1,7 +1,7 @@
 const Wishlist = require("../models/wishlist");
 const { findWishlistByUserId, creatWishlist, removeItem, addItem } = require("../repository/wishlist.repository");
 
-exports.addToWishlist = async (req, res) => {
+exports.addToWishlist = async (req) => {
     try {
         const userId = req.user;
         const { productId } = req.body;
@@ -9,10 +9,10 @@ exports.addToWishlist = async (req, res) => {
         let wishlist = await findWishlistByUserId(userId);
 
         if (!wishlist) {
-            wishlist = await creatWishlist(userId,productId)
+            wishlist = await creatWishlist(userId, productId)
         } else {
             const exists = wishlist.items.find(
-                (item) => Number(item.productId) === Number(productId)
+                (item) => item.productId.toString() === productId.toString()
             );
 
             if (!exists) {
@@ -51,10 +51,25 @@ exports.getWishlist = async (req, res) => {
             };
         }
 
+
+        const populatedWishlist = await wishlist.populate("items.productId");
+
+        const transformedItems = populatedWishlist.items.map((item) => ({
+            _id: item.productId._id,
+            title: item.productId.title,
+            price: item.productId.price,
+            thumbnail: item.productId.thumbnail,
+            brand: item.productId.brand,
+            category: item.productId.category,
+            categoryName: item.productId.categoryName,
+        }));
+
         return {
             status: "Success",
             message: "Wishlist fetched successfully",
-            data: wishlist
+            data: {
+                items: transformedItems
+            }
         };
 
     } catch (error) {
@@ -62,7 +77,7 @@ exports.getWishlist = async (req, res) => {
         return {
             status: "Error", message: "Failed to fetch wishlist"
         };
-       
+
     }
 };
 
@@ -82,7 +97,7 @@ exports.removeWishlistItem = async (req, res) => {
 
         await Wishlist.updateOne(
             { userId },
-            { $pull: { items: { productId: Number(productId) } } }
+            { $pull: { items: { productId: productId } } }
         );
 
         const updatedWishlist = await findWishlistByUserId(userId);
@@ -98,63 +113,135 @@ exports.removeWishlistItem = async (req, res) => {
         return {
             status: "Error", message: "Failed to remove product from wishlist"
         };
-       
+
     }
 };
 
-exports.toggleWishlist = async (req, res) => {
+// exports.toggleWishlist = async (req, res) => {
+//     try {
+//         const userId = req.user;
+//         console.log('userId: ', userId);
+//         const { productId } = req.body;
+
+//          if (!productId) {
+//             return {
+//                 status: "Validation",
+//                 message: "ProductId is required"
+//             };
+//         }
+
+//         let wishlist = await findWishlistByUserId(userId);
+
+//         // create wishlist if not exists
+//         if (!wishlist) {
+//             wishlist = await creatWishlist(userId,productId)
+//             return {
+//                 status: "Success",
+//                 message: "Product added to wishlist",
+//                 data: wishlist
+//             };
+//         }
+
+//         const exists = wishlist.items.find(
+//             (item) => item.productId.toString() === productId.toString()
+//         );
+
+//         if (exists) {
+//             // remove product
+//             await removeItem(userId, productId)
+
+//             const updatedWishlist = await findWishlistByUserId(userId);
+//             console.log('updatedWishlist: ', updatedWishlist);
+
+//             return {
+//                 status: "Success",
+//                 message: "Product removed from wishlist",
+//                 data: updatedWishlist
+//             };
+
+//         } else {
+//             // add product
+//             console.log("reach 1")
+//             await addItem(userId,productId);
+//             console.log("reach 2")
+
+//             const updatedWishlist = await findWishlistByUserId(userId);
+
+//             return {
+//                 status: "Success",
+//                 message: "Product added to wishlist",
+//                 data: updatedWishlist
+//             };
+//         }
+
+//     } catch (error) {
+//         console.error("Toggle wishlist error:", error);
+//         return {
+//             status: "Error", message: "Failed to toggle wishlist"
+//         };
+//     }
+// };
+
+exports.toggleWishlist = async (req) => {
     try {
         const userId = req.user;
-        console.log('userId: ', userId);
         const { productId } = req.body;
+
+        if (!productId) {
+            return {
+                status: "Validation",
+                message: "ProductId is required"
+            };
+        }
 
         let wishlist = await findWishlistByUserId(userId);
 
-        // create wishlist if not exists
+
         if (!wishlist) {
-            wishlist = await creatWishlist(userId,productId)
-            return {
-                status: "Success",
-                message: "Product added to wishlist",
-                data: wishlist
-            };
-        }
-
-        const exists = wishlist.items.find(
-            (item) => Number(item.productId) === Number(productId)
-        );
-
-        if (exists) {
-            // remove product
-            await removeItem(userId, productId)
-
-            const updatedWishlist = await findWishlistByUserId(userId);
-
-            return {
-                status: "Success",
-                message: "Product removed from wishlist",
-                data: updatedWishlist
-            };
-
+            wishlist = await creatWishlist(userId, productId);
         } else {
-            // add product
-            console.log("reach 1")
-            await addItem(userId,productId);
-            console.log("reach 2")
+            const exists = wishlist.items.find(
+                (item) => item.productId.toString() === productId.toString()
+            );
 
-            const updatedWishlist = await findWishlistByUserId(userId);
+            if (exists) {
+                wishlist.items = wishlist.items.filter(
+                    (item) => item.productId.toString() !== productId.toString()
+                );
+            } else {
+                wishlist.items.push({ productId });
+            }
 
-            return {
-                status: "Success",
-                message: "Product added to wishlist",
-                data: updatedWishlist
-            };
+            await wishlist.save();
         }
+
+
+        const populatedWishlist = await wishlist.populate("items.productId");
+
+
+        const transformedItems = populatedWishlist.items.map((item) => ({
+            _id: item.productId._id,
+            title: item.productId.title,
+            price: item.productId.price,
+            thumbnail: item.productId.thumbnail,
+            brand: item.productId.brand,
+            category: item.productId.category,
+            categoryName: item.productId.categoryName,
+        }));
+
+        return {
+            status: "Success",
+            message: "Wishlist toggled successfully",
+            data: {
+                items: transformedItems
+            }
+        };
 
     } catch (error) {
         console.error("Toggle wishlist error:", error);
         return {
-            status: "Error", message: "Failed to toggle wishlist"
+            status: "Error",
+            message: "Failed to toggle wishlist"
         };
     }
 };
