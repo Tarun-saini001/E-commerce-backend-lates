@@ -73,7 +73,7 @@ exports.addToCart = async (req) => {
 
         const transformedItems = populatedCart.items.map((item) => {
             const p = item.productId;
-
+            if (!p) return null;
             return {
                 _id: p._id,
                 title: p.title,
@@ -191,8 +191,8 @@ exports.updateCart = async (req) => {
         }
         console.log('productId: ', productId);
         const itemIndex = cartData.items.findIndex(
-            (item) => item.id.toString() === productId.toString()
-        )
+            (item) => item.productId.toString() === productId.toString()
+        );
         if (itemIndex === -1) {
             return {
                 status: "RecordNotFound",
@@ -204,9 +204,16 @@ exports.updateCart = async (req) => {
         cartData.items[itemIndex].quantity = quantity;
 
         // recalculate total
-        cartData.subtotal = cartData.items.reduce(
-            (acc, item) => acc + item.price * item.quantity, 0
-        )
+        // cartData.subtotal = cartData.items.reduce(
+        //     (acc, item) => acc + item.price * item.quantity, 0
+        // )
+
+        const populatedCart = await cartData.populate("items.productId");
+
+        cartData.subtotal = populatedCart.items.reduce(
+            (acc, item) => acc + item.productId.price * item.quantity,
+            0
+        );
 
         await cartData.save();
         console.log("cart data after update:", cartData);
@@ -240,8 +247,8 @@ exports.removeItem = async (req) => {
         console.log('productId: ', productId);
 
         const newCartItems = cartData.items.filter(
-            (item) => item.id.toString() !== productId.toString()
-        )
+            (item) => item.productId.toString() !== productId.toString()
+        );
 
         if (newCartItems.length === cartData.items.length) {
             return {
