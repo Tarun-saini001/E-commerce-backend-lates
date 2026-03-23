@@ -214,6 +214,8 @@ exports.updateCart = async (req) => {
 
         await cartData.save();
 
+        const populatedCart = await cartData.populate("items.productId");
+
         const transformedItems = cartData.items.map((item) => {
             const product = item.productId;
 
@@ -283,6 +285,8 @@ exports.removeItem = async (req) => {
         );
         await cartData.save();
 
+        const populatedCart = await cartData.populate("items.productId");
+        
         const transformedItems = cartData.items.map((item) => {
             const product = item.productId;
 
