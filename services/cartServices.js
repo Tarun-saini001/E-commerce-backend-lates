@@ -236,6 +236,7 @@ exports.updateCart = async (req) => {
 
         return {
             status: "Success",
+            message:"Quantity Updates successfully",
             data: {
                 items: transformedItems,
                 subtotal: cartData.subtotal,
@@ -299,6 +300,7 @@ exports.removeItem = async (req) => {
 
         return {
             status: "Success",
+            message:"Item removed successfully",
             data: {
                 items: transformedItems,
                 subtotal: cartData.subtotal,
