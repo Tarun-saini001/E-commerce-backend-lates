@@ -1,4 +1,5 @@
 
+const { default: mongoose } = require("mongoose");
 const Product = require("../models/product");
 
 exports.getProducts = async (req, res) => {
