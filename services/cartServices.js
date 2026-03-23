@@ -19,6 +19,7 @@ exports.addToCart = async (req) => {
         // } = req.body;
 
         const { productId, quantity = 1 } = req.body;
+        console.log('req.body: ', req.body);
 
         if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
             return {
