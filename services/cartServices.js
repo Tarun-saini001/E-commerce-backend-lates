@@ -210,20 +210,37 @@ exports.updateCart = async (req) => {
         //     (acc, item) => acc + item.price * item.quantity, 0
         // )
 
-        const populatedCart = await cartData.populate("items.productId");
 
-        cartData.subtotal = populatedCart.items.reduce(
-            (acc, item) => acc + item.productId.price * item.quantity,
+
+        await cartData.save();
+
+        const transformedItems = cartData.items.map((item) => {
+            const product = item.productId;
+
+            return {
+                _id: product._id,
+                title: product.title,
+                price: product.price,
+                thumbnail: product.thumbnail,
+                brand: product.brand,
+                category: product.category,
+                categoryName: product.categoryName,
+                quantity: item.quantity,
+            };
+        });
+
+        const subtotal = transformedItems.reduce(
+            (acc, item) => acc + item.price * item.quantity,
             0
         );
 
-        await cartData.save();
-        console.log("cart data after update:", cartData);
         return {
             status: "Success",
-            data: cartData,
-            message: "Cart update successfully"
-        }
+            data: {
+                items: transformedItems,
+                subtotal,
+            },
+        };
     } catch (error) {
         console.error("update cart error:", error);
         return {
@@ -266,11 +283,34 @@ exports.removeItem = async (req) => {
         );
         await cartData.save();
 
+        const transformedItems = cartData.items.map((item) => {
+            const product = item.productId;
+
+            return {
+                _id: product._id,
+                title: product.title,
+                price: product.price,
+                thumbnail: product.thumbnail,
+                brand: product.brand,
+                category: product.category,
+                categoryName: product.categoryName,
+                quantity: item.quantity,
+            };
+        });
+
+        const subtotal = transformedItems.reduce(
+            (acc, item) => acc + item.price * item.quantity,
+            0
+        );
+
         return {
             status: "Success",
-            data: cartData,
-            message: "Product removed from cart successfully",
+            data: {
+                items: transformedItems,
+                subtotal,
+            },
         };
+
     } catch (error) {
         console.error("removeItem cart error:", error);
         return {
