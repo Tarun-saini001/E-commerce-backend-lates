@@ -20,10 +20,10 @@ exports.addToCart = async (req) => {
 
         const { productId, quantity = 1 } = req.body;
 
-        if (!productId) {
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
             return {
                 status: "Validation",
-                message: "Product ID is required",
+                message: "Valid Product ID is required",
             };
         }
 
@@ -67,10 +67,37 @@ exports.addToCart = async (req) => {
         await cartData.save();
         console.log('cartData: after save', cartData);
 
+
+        const populatedCart = await cart.findById(cartData._id)
+            .populate("items.productId");
+
+        const transformedItems = populatedCart.items.map((item) => {
+            const p = item.productId;
+
+            return {
+                _id: p._id,
+                title: p.title,
+                price: p.price,
+                thumbnail: p.thumbnail,
+                brand: p.brand,
+                category: p.category,
+                categoryName: p.categoryName,
+                quantity: item.quantity,
+            };
+        });
+
+        const subtotal = transformedItems.reduce(
+            (acc, item) => acc + item.price * item.quantity,
+            0
+        );
+
         return {
             status: "Success",
             message: "Product added to cart",
-            data: cartData,
+            data: {
+                items: transformedItems,
+                subtotal,
+            },
         };
     } catch (error) {
         console.error("Add to cart error:", error);
@@ -102,10 +129,33 @@ exports.getCart = async (req) => {
 
         }
 
+
+        const transformedItems = cartData.items.map((item) => {
+            const product = item.productId;
+
+            return {
+                _id: product._id,
+                title: product.title,
+                price: product.price,
+                thumbnail: product.thumbnail,
+                brand: product.brand,
+                category: product.category,
+                categoryName: product.categoryName,
+                quantity: item.quantity,
+            };
+        });
+
+        const subtotal = transformedItems.reduce(
+            (acc, item) => acc + item.price * item.quantity,
+            0
+        );
+
         return {
             status: "Success",
-            messsage: "Cart fetched successfully",
-            data: cartData,
+            data: {
+                items: transformedItems,
+                subtotal,
+            },
         };
 
     } catch (error) {
