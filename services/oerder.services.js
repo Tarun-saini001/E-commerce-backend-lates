@@ -63,6 +63,7 @@ exports.createOrder = async (req) => {
 
 
     const order = await orderRepository.createOrder(orderPayload);
+    console.log('order: (create) ', order);
 
     const populatedOrder = await order.populate("items.productId");
 
