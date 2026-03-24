@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 exports.createOrder = async (req) => {
     console.log('req.body: ', req.body);
-    const userId = req.user; 
+    const userId = req.user;
     const body = req.body;
 
 
@@ -58,11 +58,23 @@ exports.createOrder = async (req) => {
         shippingFee,
         tax,
         total,
-        orderStatus:body.orderStatus
+        orderStatus: body.orderStatus
     };
 
 
     const order = await orderRepository.createOrder(orderPayload);
+
+    const populatedOrder = await order.populate("items.productId");
+
+    const transformedItems = populatedOrder.items.map((item) => ({
+        _id: item.productId._id,
+        title: item.productId.title,
+        price: item.productId.price,
+        thumbnail: item.productId.thumbnail,
+        brand: item.productId.brand,
+        category: item.productId.category,
+        quantity: item.quantity,
+    }));
 
     // clear cart after order
     await cartModel.findOneAndUpdate(
@@ -70,19 +82,23 @@ exports.createOrder = async (req) => {
         { items: [], subtotal: 0 }
     );
 
+
     return {
         status: "Success",
         message: "Order placed successfully",
-        data: order,
+        data: {
+            ...populatedOrder.toObject(),
+            items: transformedItems
+        }
     };
 };
 
 
 
 exports.getOrders = async (req) => {
-    const userId = req.user; 
+    const userId = req.user;
 
-    
+
     const userData = await userRepository.findUserById(userId);
     if (!userData) {
         return {
@@ -91,13 +107,28 @@ exports.getOrders = async (req) => {
         };
     }
 
-  
-    const orders = await orderRepository.findOrdersByUserId(userId);
+
+    const orders = await orderRepository
+        .findOrdersByUserId(userId)
+        .populate("items.productId");
+
+    const transformedOrders = orders.map((order) => ({
+        ...order.toObject(),
+        items: order.items.map((item) => ({
+            _id: item.productId._id,
+            title: item.productId.title,
+            price: item.productId.price,
+            thumbnail: item.productId.thumbnail,
+            brand: item.productId.brand,
+            category: item.productId.category,
+            quantity: item.quantity,
+        })),
+    }));
 
     return {
         status: "Success",
         message: "Orders fetched successfully",
-        data: orders,
+        data: transformedOrders,
     };
 };
 
@@ -113,7 +144,7 @@ exports.getOrderById = async (req) => {
         };
     }
 
-    const order = await orderRepository.findOrderById(orderId);
+    const order = await orderRepository.findOrderById(orderId).populate("items.productId");
 
     if (!order || order.user.toString() !== userId.toString()) {
         return {
@@ -121,10 +152,21 @@ exports.getOrderById = async (req) => {
             message: "Order not found",
         };
     }
-
+    const transformedOrder = {
+        ...order.toObject(),
+        items: order.items.map((item) => ({
+            _id: item.productId._id,
+            title: item.productId.title,
+            price: item.productId.price,
+            thumbnail: item.productId.thumbnail,
+            brand: item.productId.brand,
+            category: item.productId.category,
+            quantity: item.quantity,
+        })),
+    };
     return {
         status: "Success",
         message: "Order fetched successfully",
-        data: order,
+        data: transformedOrder,
     };
 };
