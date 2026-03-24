@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Wishlist = require("../models/wishlist");
 const { findWishlistByUserId, creatWishlist, removeItem, addItem } = require("../repository/wishlist.repository");
 
@@ -187,10 +188,11 @@ exports.toggleWishlist = async (req) => {
         const userId = req.user;
         const { productId } = req.body;
 
-        if (!productId) {
+
+        if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
             return {
                 status: "Validation",
-                message: "ProductId is required"
+                message: "Valid productId required"
             };
         }
 

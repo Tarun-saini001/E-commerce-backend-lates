@@ -314,3 +314,39 @@ exports.removeItem = async (req) => {
         };
     }
 }
+
+exports.clearCart = async (req) => {
+    try {
+        const userId = req.user;
+
+        let cartData = await cartRepo.findCartByUserId(userId);
+
+        if (!cartData) {
+            return {
+                status: "RecordNotFound",
+                message: "Cart not found"
+            };
+        }
+
+        cartData.items = [];
+        cartData.subtotal = 0;
+
+        await cartData.save();
+
+        return {
+            status: "Success",
+            message: "Cart cleared successfully",
+            data: {
+                items: [],
+                subtotal: 0
+            }
+        };
+
+    } catch (error) {
+        console.error("Clear cart error:", error);
+        return {
+            status: "Error",
+            message: "Failed to clear the cart"
+        };
+    }
+};
