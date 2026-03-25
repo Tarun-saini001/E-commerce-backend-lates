@@ -146,6 +146,7 @@ exports.getOrderById = async (req) => {
     }
 
     const order = await orderRepository.findOrderById(orderId).populate("items.productId");
+    console.log('order: ', order);
 
     if (!order || order.user.toString() !== userId.toString()) {
         return {
