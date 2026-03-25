@@ -205,25 +205,25 @@ exports.getOrders = async (req) => {
 
         const orders = await orderRepository
             .findOrdersByUserId(userId)
-            .populate("items.productId");
+            
 
-        const transformedOrders = orders.map((order) => ({
-            ...order.toObject(),
-            items: order.items.map((item) => ({
-                _id: item.productId._id,
-                title: item.productId.title,
-                price: item.productId.price,
-                thumbnail: item.productId.thumbnail,
-                brand: item.productId.brand,
-                category: item.productId.category,
-                quantity: item.quantity,
-            })),
-        }));
+        // const transformedOrders = orders.map((order) => ({
+        //     ...order.toObject(),
+        //     items: order.items.map((item) => ({
+        //         _id: item.productId._id,
+        //         title: item.productId.title,
+        //         price: item.productId.price,
+        //         thumbnail: item.productId.thumbnail,
+        //         brand: item.productId.brand,
+        //         category: item.productId.category,
+        //         quantity: item.quantity,
+        //     })),
+        // }));
 
         return {
             status: "Success",
             message: "Orders fetched successfully",
-            data: transformedOrders,
+            data: orders,
         };
     } catch (error) {
         console.log('error while getting orders ', error);
