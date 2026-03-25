@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const Product = require("./product");
 
 const orderItemSchema = new mongoose.Schema(
     {
@@ -7,7 +6,23 @@ const orderItemSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Product",
         },
-        quantity: { type: Number },
+        title: { type: String, required: true },
+        description: { type: String },
+        price: { type: Number, required: true },
+        discountPercentage: { type: Number },
+        rating: { type: Number },
+        brand: { type: String },
+        category: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Category",
+        },
+        categoryName: { type: String },
+        thumbnail: { type: String },
+
+        quantity: { type: Number, required: true, min: 1 },
+
+        // optional but very useful
+        totalPrice: { type: Number },
     },
     { _id: false }
 );
