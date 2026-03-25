@@ -126,7 +126,7 @@ exports.createOrder = async (req) => {
     const total = subtotal + shippingFee + tax;
 
 
-    const populatedCartItems = await cart.populate("cart.items.productId");
+    const populatedCartItems = await cart.populate("items.productId");
 
     const transformedItems = populatedCartItems.items.map((item) => ({
         _id: item.productId._id,
@@ -163,6 +163,7 @@ exports.createOrder = async (req) => {
     };
 
 
+    console.log('orderPayload: ', orderPayload);
     const order = await orderRepository.createOrder(orderPayload);
     console.log('order: (create) ', order);
 
