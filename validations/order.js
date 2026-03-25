@@ -50,7 +50,7 @@ const {z} = require("zod")
         .max(300),
 
     phone: z.string()
-        .regex(/^\d{10}$/, { message: "Invalid phone number" }).optional(), // Indian format
+        .regex(/^\+?\d{10,14}$/, { message: "Invalid phone number" }).optional(), // Indian format
 
     email: z.string()
         .email({ message: "Invalid email address" }).optional(),
