@@ -19,6 +19,7 @@ exports.getOrders = async (req, res) => {
 
         if (result.status === "RecordNotFound") { return res.status(404).json({ message: result.message }); }
         if (data.status == "Error") { res.status(500).json({ message: data.message }) }
+        if (data.status == "Success") { res.status(200).json({ message: data.message, data: data.data }); }
 
         return res.status(200).json({ message: result.message, data: result.data });
     } catch (err) {

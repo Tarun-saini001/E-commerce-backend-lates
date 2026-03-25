@@ -246,7 +246,7 @@ exports.getOrderById = async (req) => {
             };
         }
 
-        const order = await orderRepository.findOrderById(orderId).populate("items.productId");
+        const order = await orderRepository.findOrderById(orderId)
 
         if (!order || order.user.toString() !== userId.toString()) {
             return {
@@ -254,22 +254,22 @@ exports.getOrderById = async (req) => {
                 message: "Order not found",
             };
         }
-        const transformedOrder = {
-            ...order.toObject(),
-            items: order.items.map((item) => ({
-                _id: item.productId._id,
-                title: item.productId.title,
-                price: item.productId.price,
-                thumbnail: item.productId.thumbnail,
-                brand: item.productId.brand,
-                category: item.productId.category,
-                quantity: item.quantity,
-            })),
-        };
+        // const transformedOrder = {
+        //     ...order.toObject(),
+        //     items: order.items.map((item) => ({
+        //         _id: item.productId._id,
+        //         title: item.productId.title,
+        //         price: item.productId.price,
+        //         thumbnail: item.productId.thumbnail,
+        //         brand: item.productId.brand,
+        //         category: item.productId.category,
+        //         quantity: item.quantity,
+        //     })),
+        // };
         return {
             status: "Success",
             message: "Order fetched successfully",
-            data: transformedOrder,
+            data: order,
         };
     } catch (error) {
         console.log('error while getting order by Id ', error);
