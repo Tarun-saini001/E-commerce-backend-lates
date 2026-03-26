@@ -21,7 +21,7 @@ exports.getOrders = async (req, res) => {
         if (data.status == "Error") { res.status(500).json({ message: data.message }) }
         if (data.status == "Success") { res.status(200).json({ message: data.message, data: data.data }); }
 
-        return res.status(200).json({ message: result.message, data: result.data });
+        // return res.status(200).json({ message: data.message, data: data.data });
     } catch (err) {
         console.error(err);
         return res.status(500).json({ message: "Internal Server Error" });
