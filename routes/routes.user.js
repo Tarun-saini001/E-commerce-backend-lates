@@ -1,4 +1,5 @@
 const router = require("express").Router();
+const { ROLES } = require("../config/constants");
 const authController = require("../controllers/auth.controller");
 const verifyToken = require("../middlewares/verifyToken");
 
@@ -9,8 +10,8 @@ router.post("/login", authController.login);
 router.post("/refreshToken", authController.refreshToken);
 router.post("/logout", authController.logout);
 
-router.get("/me", verifyToken, authController.getUser);
+router.get("/me", verifyToken(ROLES.USER), authController.getUser);
 
-router.post("/change-password", verifyToken, authController.changePassword);
+router.post("/change-password", verifyToken(ROLES.USER), authController.changePassword);
 
 module.exports = router;
