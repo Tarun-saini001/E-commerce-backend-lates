@@ -78,6 +78,7 @@ exports.logout = async (req, res) => {
 
 exports.getUser = async (req, res) => {
     try {
+        console.log("reached in comtroller");
         const data = await authService.me(req, res);
 
         if (data.status == "RecordNotFound") { return res.status(400).json({ message: data.message }) }

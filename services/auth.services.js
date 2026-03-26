@@ -444,6 +444,7 @@ exports.logout = async (req, res) => {
 
 exports.me = async (req, res) => {
     try {
+        console.log("reached in service");
         const id = req.user.id;
         const userData = await userRepo.getUserWithoutPassword(id)
         if (!userData) {
