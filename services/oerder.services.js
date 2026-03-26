@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 
 // exports.createOrder = async (req) => {
 //     console.log('req.body: ', req.body);
-//     const userId = req.user;
+//     const userId = req.user.id;
 //     const body = req.body;
 
 
@@ -97,7 +97,7 @@ const mongoose = require('mongoose');
 exports.createOrder = async (req) => {
     try {
         console.log('req.body: ', req.body);
-        const userId = req.user;
+        const userId = req.user.id;
         const body = req.body;
 
 
@@ -112,6 +112,7 @@ exports.createOrder = async (req) => {
         }
         // get user cart
         const cart = await cartModel.findOne({ user: userId });
+        console.log('cart: fetch cart data in create order', cart);
 
         if (!cart || cart.items.length === 0) {
             return {
@@ -191,7 +192,7 @@ exports.createOrder = async (req) => {
 
 exports.getOrders = async (req) => {
     try {
-        const userId = req.user;
+        const userId = req.user.id;
 
 
         const userData = await userRepository.findUserById(userId);
@@ -236,7 +237,7 @@ exports.getOrders = async (req) => {
 
 exports.getOrderById = async (req) => {
     try {
-        const userId = req.user;
+        const userId = req.user.id;
         const orderId = req.params.id;
 
         if (!mongoose.Types.ObjectId.isValid(orderId)) {

@@ -5,8 +5,8 @@ const cartRepo = require("../repository/cart.repository")
 
 exports.addToCart = async (req) => {
     try {
-        console.log('req.user: ', req.user);
-        const userId = req.user;
+        console.log('req.user: ', req.user.id);
+        const userId = req.user.id;
 
         // const {
         //     _id,
@@ -112,7 +112,7 @@ exports.addToCart = async (req) => {
 
 exports.getCart = async (req) => {
     try {
-        const id = req.user;
+        const id = req.user.id;
 
         const cartData = await cart.findOne({ user: id })
             .populate("items.productId");
@@ -171,7 +171,7 @@ exports.getCart = async (req) => {
 
 exports.updateCart = async (req) => {
     try {
-        const id = req.user
+        const id = req.user.id
         const { productId } = req.params;
         const { quantity } = req.body;
 
@@ -254,7 +254,7 @@ exports.updateCart = async (req) => {
 
 exports.removeItem = async (req) => {
     try {
-        const id = req.user;
+        const id = req.user.id;
         const { productId } = req.params;
         let cartData = await cartRepo.findCartByUserId(id);
 
@@ -317,7 +317,7 @@ exports.removeItem = async (req) => {
 
 exports.clearCart = async (req) => {
     try {
-        const userId = req.user;
+        const userId = req.user.id;
 
         let cartData = await cartRepo.findCartByUserId(userId);
 

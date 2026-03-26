@@ -296,7 +296,9 @@ exports.login = async (req, res) => {
 
         }
         const accessToken = await generateAccessToken(userData);
+        console.log('accessToken: ', accessToken);
         const refreshToken = await generateRefreshToken(userData);
+        console.log('refreshToken: ', refreshToken);
 
         await tokenRepo.createToken(
             refreshToken,
@@ -442,7 +444,7 @@ exports.logout = async (req, res) => {
 
 exports.me = async (req, res) => {
     try {
-        const id = req.user;
+        const id = req.user.id;
         const userData = await userRepo.getUserWithoutPassword(id)
         if (!userData) {
             return {
@@ -483,7 +485,7 @@ exports.changePassword = async (req, res) => {
             }
         }
 
-        const userId = req.user;
+        const userId = req.user.id;
         const userData = await userRepo.findUserById(userId);
         if (!userData) {
             return {

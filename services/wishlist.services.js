@@ -4,7 +4,7 @@ const { findWishlistByUserId, creatWishlist, removeItem, addItem } = require("..
 
 exports.addToWishlist = async (req) => {
     try {
-        const userId = req.user;
+        const userId = req.user.id;
         const { productId } = req.body;
 
         let wishlist = await findWishlistByUserId(userId);
@@ -38,7 +38,7 @@ exports.addToWishlist = async (req) => {
 
 exports.getWishlist = async (req, res) => {
     try {
-        const userId = req.user;
+        const userId = req.user.id;
 
         const wishlist = await findWishlistByUserId(userId);
 
@@ -84,7 +84,7 @@ exports.getWishlist = async (req, res) => {
 
 exports.removeWishlistItem = async (req, res) => {
     try {
-        const userId = req.user;
+        const userId = req.user.id;
         const { productId } = req.params;
 
         let wishlist = await findWishlistByUserId(userId);
@@ -120,7 +120,7 @@ exports.removeWishlistItem = async (req, res) => {
 
 // exports.toggleWishlist = async (req, res) => {
 //     try {
-//         const userId = req.user;
+//         const userId = req.user.id;
 //         console.log('userId: ', userId);
 //         const { productId } = req.body;
 
@@ -185,7 +185,7 @@ exports.removeWishlistItem = async (req, res) => {
 
 exports.toggleWishlist = async (req) => {
     try {
-        const userId = req.user;
+        const userId = req.user.id;
         const { productId } = req.body;
 
 

@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken")
 
 const generateAccessToken = (user) => {
     return new Promise((resolve, reject) => {
-        const userInfo = { id: user._id };
+        const userInfo = { id: user._id, role: user.role };
         jwt.sign(userInfo, process.env.JWT_SECRET_KEY, { expiresIn: "15m" }, (err, token) => {
             if (err) {
                 return reject("Something went wrong while generating token")
@@ -13,4 +13,4 @@ const generateAccessToken = (user) => {
     })
 }
 
-module.exports=generateAccessToken
+module.exports = generateAccessToken
