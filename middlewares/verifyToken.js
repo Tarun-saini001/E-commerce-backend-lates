@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
-const user = require("../models/user");
+// const user = require("../models/user");
+const userRepo = require("../repository/user.repository")
 
 function verifyToken(...allowedRoles) {
   return async (req, res, next) => {
@@ -22,7 +23,8 @@ function verifyToken(...allowedRoles) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
       console.log('decoded: ', decoded);
 
-      const user = await user.findById(decoded.id);
+      // const user = await user.findById(decoded.id);
+      const user= await userRepo.findUserById(decoded.id)
 
       if (!user) {
         return res.status(401).json({ message: "User not found" });
