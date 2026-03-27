@@ -10,7 +10,7 @@ router.post("/login", authController.login);
 router.post("/refreshToken", authController.refreshToken);
 router.post("/logout", authController.logout);
 
-router.get("/me", verifyToken(ROLES.USER), authController.getUser);
+router.get("/me", verifyToken(ROLES.USER,ROLES.ADMIN), authController.getUser);
 
 router.post("/change-password", verifyToken(ROLES.USER), authController.changePassword);
 

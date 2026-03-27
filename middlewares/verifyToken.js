@@ -34,6 +34,8 @@ function verifyToken(...allowedRoles) {
         return res.status(403).json({ message: "User Deactivated" });
       }
 
+      console.log('allowedRoles: ', allowedRoles);
+      console.log('Number(decoded.role): ', Number(decoded.role));
       if (allowedRoles.length && !allowedRoles.includes(Number(decoded.role))) {
         return res.status(403).json({ message: "Access denied" });
       }
