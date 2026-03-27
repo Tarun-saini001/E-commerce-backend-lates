@@ -12,6 +12,6 @@ router.post("/logout", authController.logout);
 
 router.get("/me", verifyToken(ROLES.USER,ROLES.ADMIN), authController.getUser);
 
-router.post("/change-password", verifyToken(ROLES.USER), authController.changePassword);
+router.post("/change-password", verifyToken(ROLES.USER,ROLES.ADMIN), authController.changePassword);
 
 module.exports = router;
