@@ -14,4 +14,7 @@ router.get("/me", verifyToken(ROLES.USER,ROLES.ADMIN), authController.getUser);
 
 router.post("/change-password", verifyToken(ROLES.USER,ROLES.ADMIN), authController.changePassword);
 
+router.get("/users",verifyToken(ROLES.ADMIN),authController.getAllUsers)
+
+router.patch("/changeStatus/:userId",verifyToken(ROLES.ADMIN),authController.toggleUserActiveStatus)
 module.exports = router;

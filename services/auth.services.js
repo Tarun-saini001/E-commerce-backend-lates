@@ -286,6 +286,14 @@ exports.login = async (req, res) => {
                 message: "User not found"
             }
         }
+
+         if (!userData.isActive) {
+            return {
+                status: "Blocked",
+                message: "Account Blocked"
+            };
+        }
+
         const isMatch = await bcrypt.compare(body.password, userData.password);
         console.log('isMatch: ', isMatch);
         if (!isMatch) {
@@ -308,15 +316,19 @@ exports.login = async (req, res) => {
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 15 * 60 * 1000
         });
 
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
         return {
@@ -391,15 +403,19 @@ exports.refreshToken = async (req, res) => {
 
         res.cookie("refreshToken", newRefreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 15 * 60 * 1000
         });
 
@@ -530,3 +546,69 @@ exports.changePassword = async (req, res) => {
 }
 
 
+exports.getAllUsers = async (req, res) => {
+    try {
+
+        const users = await userRepo.getAllUsers();
+
+        if (!users || users.length === 0) {
+            return {
+                status: "RecordNotFound",
+                message: "No users found"
+            };
+        }
+
+        return {
+            status: "Success",
+            data: users,
+            message: "Users fetched successfully"
+        };
+
+    } catch (error) {
+        console.log("getAllUsers error:", error);
+        return {
+            status: "Error", message: "Failed to get all users"
+        };
+    }
+};
+
+exports.toggleUserActiveStatus = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return {
+                status: "Validation",
+                message: "User ID is required"
+            };
+        }
+
+        const userData = await userRepo.findUserById(userId);
+
+        if (!userData) {
+            return {
+                status: "RecordNotFound",
+                message: "User not found"
+            };
+        }
+
+        userData.isActive = !userData.isActive;
+
+        await userData.save();
+
+        return {
+            status: "Success",
+            message: `User is now ${userData.isActive ? "Active" : "Inactive"}`,
+            data: {
+                userId: userData._id,
+                isActive: userData.isActive
+            }
+        };
+
+    } catch (error) {
+        console.error("Toggle user active error:", error);
+       return {
+            status: "Error", message: "Action failed"
+        };
+    }
+};

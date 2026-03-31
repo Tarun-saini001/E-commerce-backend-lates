@@ -1,6 +1,8 @@
 
 const { default: mongoose } = require("mongoose");
 const Product = require("../models/product");
+const { success } = require("zod");
+const category = require("../models/category");
 
 exports.getProducts = async (req, res) => {
     try {
@@ -65,7 +67,56 @@ exports.getProductById = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
     try {
-        const product = await Product.create(req.body);
+        const body = req.body;
+        if (!body) {
+            return {
+                status: "Validation",
+                message: "Body missing"
+            }
+        }
+
+        const exist = await Product.findOne({
+            $and: [
+                { title: body.title },
+                { categoryName: body.categoryName },
+                { price: body.price }
+            ]
+        })
+
+        console.log('req.file: ', req.file);
+        if (exist) {
+            exist.stock += 1
+
+            if (req.file) {
+                exist.thumbnail = `uploads/products/${req.file.filename}`;
+            }
+
+            await exist.save();
+            return {
+                status: "Success",
+                message: "Product already exist",
+                data: exist
+            }
+        }
+        if (req.file) {
+            body.thumbnail = `uploads/products/${req.file.filename}`
+        }
+
+        const isCategoryExist = await category.findOne({ name: body.categoryName })
+        console.log('isCategoryExist: ', isCategoryExist);
+        if (!isCategoryExist) {
+            return {
+                status: "RecordNotFound",
+                message: "Category not exist"
+            }
+        }
+        body.category = isCategoryExist._id;
+
+        console.log('body: ', body);
+        productData = { ...body }
+        console.log('productData: ', productData);
+
+        const product = await Product.create(productData);
         console.log('product: ', product);
 
         return {
@@ -74,8 +125,53 @@ exports.createProduct = async (req, res) => {
             data: product,
         };
     } catch (error) {
-        res.status(500).json({
-            message: "Failed to create product",
-        });
+        console.log('error Failed to create product', error);
+        return {
+            status: "Error", message: "Failed to create product"
+        };
+
     }
 };
+
+exports.updateProduct = async (req, res) => {
+    try {
+        const body = req.body;
+        const productId = req.params.id
+
+        if (!body) {
+            return {
+                status: "Validation",
+                message: "Body missing"
+            }
+        }
+        const product = await Product.findById(productId);
+
+        if (!product) {
+            return {
+                status: "RecordNotFound",
+                message: "Product not found"
+            };
+        }
+
+        if (req.file) {
+            body.thumbnail = `uploads/products/${req.file.filename}`;
+        }
+        
+        const updatedProduct = await Product.findByIdAndUpdate(productId, { $set: body },
+            { new: true }
+        );
+        console.log('updatedProduct: ', updatedProduct);
+
+        return {
+            status: "Success",
+            message: "Product updated successfully",
+            data: updatedProduct
+        }
+
+    } catch (error) {
+        console.log('error while updating product by Id ', error);
+        return {
+            status: "Error", message: "Error while updating product by Id"
+        };
+    }
+}

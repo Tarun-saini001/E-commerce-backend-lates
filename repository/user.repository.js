@@ -48,3 +48,13 @@ exports.getUserWithoutPassword = async (id) => {
         throw error;
     }
 };
+
+
+exports.getAllUsers = async () => {
+    try {
+        return await user.find().select("-password -confirmPassword");
+    } catch (error) {
+        console.log("Error fetching all user:", error);
+        throw error;
+    }
+};
