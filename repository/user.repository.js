@@ -50,11 +50,15 @@ exports.getUserWithoutPassword = async (id) => {
 };
 
 
-exports.getAllUsers = async () => {
+exports.getAllUsers = async (skip, limit) => {
     try {
-        return await user.find().select("-password -confirmPassword");
+        return await user.find().select("-password -confirmPassword").skip(skip).limit(limit)
     } catch (error) {
         console.log("Error fetching all user:", error);
         throw error;
     }
+};
+
+exports.getUsersCount = async () => {
+    return await user.countDocuments();
 };

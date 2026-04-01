@@ -5,30 +5,50 @@ const { success } = require("zod");
 const category = require("../models/category");
 
 exports.getProducts = async (req, res) => {
-    try {
-        const { category } = req.query;
+  try {
+    const { category, page = 1, limit = 9 } = req.query;
 
-        let filter = {};
+    const currentPage = parseInt(page);
+    const perPage = parseInt(limit);
 
-        if (category) {
-            filter.categoryName = {
-                $regex: new RegExp(`^${category}$`, "i"),
-            };
-        }
-        const products = await Product.find(filter);
+    const skip = (currentPage - 1) * perPage;
 
-        return {
-            status: "Success",
-            message: "Products fetched successfully!",
-            data: products,
-        };
-    } catch (error) {
-        console.log('error: get products service error ', error.message);
-        return {
-            status: "Error", message: "Error fetching product"
-        };
+    let filter = {};
 
+    if (category) {
+      filter.categoryName = {
+        $regex: new RegExp(`^${category}$`, "i"),
+      };
     }
+
+    const products = await Product.find(filter)
+    .skip(skip)
+    .limit(perPage)
+    console.log('products: ', products);
+
+    const totalProducts = await Product.countDocuments(filter);
+
+    const totalPages = Math.ceil(totalProducts / perPage);
+
+    return {
+      status: "Success",
+      message: "Products fetched successfully!",
+      data: {
+        products,
+        currentPage,
+        totalPages,
+        totalProducts,
+      },
+    };
+
+  } catch (error) {
+    console.log("error: get products service error ", error.message);
+
+    return {
+      status: "Error",
+      message: "Error fetching product",
+    };
+  }
 };
 
 

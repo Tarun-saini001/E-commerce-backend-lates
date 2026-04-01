@@ -287,7 +287,7 @@ exports.login = async (req, res) => {
             }
         }
 
-         if (!userData.isActive) {
+        if (!userData.isActive) {
             return {
                 status: "Blocked",
                 message: "Account Blocked"
@@ -549,18 +549,32 @@ exports.changePassword = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
     try {
 
-        const users = await userRepo.getAllUsers();
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 6;
+
+        const skip = (page - 1) * limit;
+
+        const users = await userRepo.getAllUsers(skip, limit);
+
+        const totalUsers = await userRepo.getUsersCount();
 
         if (!users || users.length === 0) {
             return {
-                status: "RecordNotFound",
-                message: "No users found"
+                status: "Success",
+                message: "Users fetched successfully",
+                data:[]
             };
         }
 
         return {
             status: "Success",
-            data: users,
+            data: {
+                users:users,
+                currentPage: page,
+                totalPages: Math.ceil(totalUsers / limit),
+                totalUsers:totalUsers
+            },
             message: "Users fetched successfully"
         };
 
@@ -607,7 +621,7 @@ exports.toggleUserActiveStatus = async (req, res) => {
 
     } catch (error) {
         console.error("Toggle user active error:", error);
-       return {
+        return {
             status: "Error", message: "Action failed"
         };
     }
