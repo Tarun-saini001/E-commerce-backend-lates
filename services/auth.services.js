@@ -13,7 +13,9 @@ const { OTP_FOR } = require("../config/constants");
 
 const userRepo = require("../repository/user.repository")
 const otpRepo = require("../repository/otp.repository")
-const tokenRepo = require("../repository/token.repository")
+const tokenRepo = require("../repository/token.repository");
+const product = require("../models/product");
+const Order = require("../models/order");
 
 
 exports.register = async (req, res) => {
@@ -556,6 +558,7 @@ exports.getAllUsers = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const users = await userRepo.getAllUsers(skip, limit);
+        console.log('users: ', users);
 
         const totalUsers = await userRepo.getUsersCount();
 
@@ -563,17 +566,17 @@ exports.getAllUsers = async (req, res) => {
             return {
                 status: "Success",
                 message: "Users fetched successfully",
-                data:[]
+                data: []
             };
         }
 
         return {
             status: "Success",
             data: {
-                users:users,
+                users: users,
                 currentPage: page,
                 totalPages: Math.ceil(totalUsers / limit),
-                totalUsers:totalUsers
+                totalUsers: totalUsers
             },
             message: "Users fetched successfully"
         };
@@ -623,6 +626,57 @@ exports.toggleUserActiveStatus = async (req, res) => {
         console.error("Toggle user active error:", error);
         return {
             status: "Error", message: "Action failed"
+        };
+    }
+};
+
+
+
+exports.getDashboardStats = async () => {
+    try {
+
+        const [totalUsers, totalProducts, totalOrders, revenueResult] =
+            await Promise.all([
+                user.countDocuments(),
+                product.countDocuments(),
+                Order.countDocuments(),
+
+                Order.aggregate([
+                    {
+                        $match: { orderStatus: "completed" }
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalRevenue: { $sum: "$total" }
+                        }
+                    }
+                ])
+            ]);
+
+        const totalRevenue =
+            revenueResult.length > 0 ? revenueResult[0]?.totalRevenue : 0;
+        console.log('totalRevenue: ', totalRevenue);
+        console.log('totalUsers: ', totalUsers);
+        console.log('totalProducts: ', totalProducts);
+        console.log('totalOrders: ', totalOrders);
+
+        return {
+            status: "Success",
+            message: "Dashboard data fetched successfully",
+            data: {
+                totalUsers,
+                totalProducts,
+                totalOrders,
+                totalRevenue,
+            },
+        };
+    } catch (error) {
+        console.log("Dashboard Service Error:", error.message);
+
+        return {
+            status: "Error",
+            message: "Failed to fetch dashboard data",
         };
     }
 };

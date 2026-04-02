@@ -52,7 +52,10 @@ exports.getUserWithoutPassword = async (id) => {
 
 exports.getAllUsers = async (skip, limit) => {
     try {
-        return await user.find().select("-password -confirmPassword").skip(skip).limit(limit)
+        return await user.find().select("-password -confirmPassword")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
     } catch (error) {
         console.log("Error fetching all user:", error);
         throw error;

@@ -9,6 +9,9 @@ const uploadProduct= createUploader("products")
 
 router.get("/",productController.getProducts)
 router.get("/:id",productController.getProductById)
-router.post("/",verifyToken(ROLES.ADMIN),uploadProduct.single("img"), productController.createProduct)
-router.patch("/:id",verifyToken(ROLES.ADMIN),productController.updateProduct)
+router.post("/",verifyToken(ROLES.ADMIN),uploadProduct.single("thumbnail"), productController.createProduct)
+router.patch("/:id",verifyToken(ROLES.ADMIN),uploadProduct.single("thumbnail"),productController.updateProduct);
+router.delete("/:id",verifyToken(ROLES.ADMIN),productController.deleteProduct)
+// router.get("/dashboard",verifyToken(ROLES.ADMIN),productController.getDashboardStats)
+
 module.exports = router;

@@ -3,52 +3,55 @@ const { default: mongoose } = require("mongoose");
 const Product = require("../models/product");
 const { success } = require("zod");
 const category = require("../models/category");
+const user = require("../models/user");
+const Order = require("../models/order");
 
 exports.getProducts = async (req, res) => {
-  try {
-    const { category, page = 1, limit = 9 } = req.query;
+    try {
+        const { category, page = 1, limit = 9 } = req.query;
 
-    const currentPage = parseInt(page);
-    const perPage = parseInt(limit);
+        const currentPage = parseInt(page);
+        const perPage = parseInt(limit);
 
-    const skip = (currentPage - 1) * perPage;
+        const skip = (currentPage - 1) * perPage;
 
-    let filter = {};
+        let filter = {};
 
-    if (category) {
-      filter.categoryName = {
-        $regex: new RegExp(`^${category}$`, "i"),
-      };
+        if (category) {
+            filter.categoryName = {
+                $regex: new RegExp(`^${category}$`, "i"),
+            };
+        }
+
+        const products = await Product.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(perPage)
+        console.log('products: ', products);
+
+        const totalProducts = await Product.countDocuments(filter);
+
+        const totalPages = Math.ceil(totalProducts / perPage);
+
+        return {
+            status: "Success",
+            message: "Products fetched successfully!",
+            data: {
+                products,
+                currentPage,
+                totalPages,
+                totalProducts,
+            },
+        };
+
+    } catch (error) {
+        console.log("error: get products service error ", error.message);
+
+        return {
+            status: "Error",
+            message: "Error fetching product",
+        };
     }
-
-    const products = await Product.find(filter)
-    .skip(skip)
-    .limit(perPage)
-    console.log('products: ', products);
-
-    const totalProducts = await Product.countDocuments(filter);
-
-    const totalPages = Math.ceil(totalProducts / perPage);
-
-    return {
-      status: "Success",
-      message: "Products fetched successfully!",
-      data: {
-        products,
-        currentPage,
-        totalPages,
-        totalProducts,
-      },
-    };
-
-  } catch (error) {
-    console.log("error: get products service error ", error.message);
-
-    return {
-      status: "Error",
-      message: "Error fetching product",
-    };
-  }
 };
 
 
@@ -121,6 +124,7 @@ exports.createProduct = async (req, res) => {
         if (req.file) {
             body.thumbnail = `uploads/products/${req.file.filename}`
         }
+        console.log('body.categoryName: ', body.categoryName);
 
         const isCategoryExist = await category.findOne({ name: body.categoryName })
         console.log('isCategoryExist: ', isCategoryExist);
@@ -176,7 +180,7 @@ exports.updateProduct = async (req, res) => {
         if (req.file) {
             body.thumbnail = `uploads/products/${req.file.filename}`;
         }
-        
+
         const updatedProduct = await Product.findByIdAndUpdate(productId, { $set: body },
             { new: true }
         );
@@ -195,3 +199,40 @@ exports.updateProduct = async (req, res) => {
         };
     }
 }
+
+exports.deleteProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return {
+                status: "Validation",
+                message: "Invalid ID format"
+            };
+        }
+
+        const product = await Product.findById(id);
+
+        if (!product) {
+            return {
+                status: "RecordNotFound",
+                message: "Product not found"
+            };
+        }
+
+        await Product.findByIdAndDelete(id);
+
+        return {
+            status: "Success",
+            message: "Product deleted successfully"
+        };
+
+    } catch (error) {
+        console.log("error while deleting product ", error.message);
+
+        return {
+            status: "Error",
+            message: "Error deleting product"
+        };
+    }
+};

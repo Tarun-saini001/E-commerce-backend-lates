@@ -3,12 +3,32 @@ const Category = require("../models/category");
 
 exports.getCategories = async (req, res) => {
   try {
-    const categories = await Category.find();
+    const { page = 1, limit = 6 } = req.query;
+
+    const currentPage = parseInt(page);
+    const perPage = parseInt(limit);
+
+    const skip = (currentPage - 1) * perPage;
+
+    const categories = await Category.find()
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(perPage);
+    console.log('categories: ', categories);
+
+    const totalCategories = await Category.countDocuments();
+
+    const totalPages = Math.ceil(totalCategories / perPage);
 
     return {
       status: "Success",
       message: "Categories fetched successfully",
-      data: categories,
+      data: {
+        categories,
+        currentPage,
+        totalPages,
+        totalCategories,
+      },
     };
   } catch (error) {
     console.log('error:(getCategories) ', error);
@@ -24,20 +44,20 @@ exports.addCategory = async (req, res) => {
   try {
     let { name } = req.body;
 
-    if (!name) {
+    if (!name || !req.file) {
       return {
         status: "Validation",
-        message: "Category name is required",
+        message: "Category Name and Image  required",
       };
     }
     console.log('req.file: ', req.file);
 
-    if (!req.file) {
-      return {
-        status: "Validation",
-        message: "Category image is required",
-      };
-    }
+    // if (!req.file) {
+    //   return {
+    //     status: "Validation",
+    //     message: "Category image is required",
+    //   };
+    // }
 
     name = name.trim();
 
@@ -80,9 +100,10 @@ exports.deleteCategory = async (req, res) => {
     const { id } = req.params;
 
     if (!id) {
-      return { 
-        status:"RecordNotFound",
-        message: "Category ID is required" };
+      return {
+        status: "RecordNotFound",
+        message: "Category ID is required"
+      };
     }
     const category = await Category.findById(id);
 
@@ -96,7 +117,7 @@ exports.deleteCategory = async (req, res) => {
     await Category.findByIdAndDelete(id);
 
     return {
-      status:"Success",
+      status: "Success",
       message: "Category deleted successfully",
     };
   } catch (error) {
