@@ -301,7 +301,7 @@ exports.login = async (req, res) => {
         if (!isMatch) {
             return {
                 status: "Validation",
-                message: "Invalid Email or Password"
+                message: "Invalid Credentials"
             }
 
         }
@@ -654,13 +654,14 @@ exports.getDashboardStats = async () => {
                 ])
             ]);
 
-        const totalRevenue =
-            revenueResult.length > 0 ? revenueResult[0]?.totalRevenue : 0;
+        const Revenue = revenueResult.length > 0 ? revenueResult[0]?.totalRevenue : 0;
+
+        const totalRevenue = Math.floor(Revenue)
+
         console.log('totalRevenue: ', totalRevenue);
         console.log('totalUsers: ', totalUsers);
         console.log('totalProducts: ', totalProducts);
         console.log('totalOrders: ', totalOrders);
-
         return {
             status: "Success",
             message: "Dashboard data fetched successfully",

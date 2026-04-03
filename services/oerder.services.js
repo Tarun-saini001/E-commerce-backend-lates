@@ -111,7 +111,7 @@ exports.createOrder = async (req) => {
                 message: "User not found",
             };
         }
-        
+
         const cart = await cartModel.findOne({ user: userId });
         console.log('cart: fetch cart data in create order', cart);
 
@@ -135,6 +135,10 @@ exports.createOrder = async (req) => {
         const shippingFee = 15;
         const tax = subtotal * 0.05;
         const total = subtotal + shippingFee + tax;
+
+        subtotal = subtotal.toFixed(2);
+        tax = tax.toFixed(2);
+        total = total.toFixed(2);
 
         const transformedItems = populatedCartItems.items.map((item) => ({
             _id: item.productId._id,
