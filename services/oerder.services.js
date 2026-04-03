@@ -1,4 +1,5 @@
 const cartModel = require("../models/cart");
+const Order = require("../models/order");
 const user = require("../models/user");
 const orderRepository = require("../repository/order.repository");
 const userRepository = require("../repository/user.repository")
@@ -110,7 +111,7 @@ exports.createOrder = async (req) => {
                 message: "User not found",
             };
         }
-        // get user cart
+        
         const cart = await cartModel.findOne({ user: userId });
         console.log('cart: fetch cart data in create order', cart);
 
@@ -121,14 +122,19 @@ exports.createOrder = async (req) => {
             };
         }
 
-        // calculate totals
-        const subtotal = cart.subtotal;
-        const shippingFee = 15;
-        const tax = subtotal * 0.05;
-        const total = subtotal + shippingFee + tax;
 
 
         const populatedCartItems = await cart.populate("items.productId");
+
+
+        const subtotal = populatedCartItems.items.reduce((acc, item) => {
+            const price = item.productId?.price || 0;
+            return acc + price * item.quantity;
+        }, 0);
+
+        const shippingFee = 15;
+        const tax = subtotal * 0.05;
+        const total = subtotal + shippingFee + tax;
 
         const transformedItems = populatedCartItems.items.map((item) => ({
             _id: item.productId._id,
@@ -194,6 +200,9 @@ exports.getOrders = async (req) => {
     try {
         const userId = req.user.id;
 
+        const currentPage = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (currentPage - 1) * limit;
 
         const userData = await userRepository.findUserById(userId);
         if (!userData) {
@@ -205,8 +214,12 @@ exports.getOrders = async (req) => {
 
 
         const orders = await orderRepository
-            .findOrdersByUserId(userId)
-            
+            .findOrdersByUserId(userId, skip, limit)
+
+        console.log('orders: ', orders);
+        const totalOrders = await Order.countDocuments();
+
+        const totalPages = Math.ceil(totalOrders / limit);
 
         // const transformedOrders = orders.map((order) => ({
         //     ...order.toObject(),
@@ -224,12 +237,51 @@ exports.getOrders = async (req) => {
         return {
             status: "Success",
             message: "Orders fetched successfully",
-            data: orders,
+            data: {
+                orders,
+                currentPage,
+                totalPages,
+                totalOrders
+            },
         };
     } catch (error) {
         console.log('error while getting orders ', error);
         return {
             status: "Error", message: "Error while getting orders"
+        };
+    }
+};
+
+
+exports.getAllOrders = async (req) => {
+    try {
+        const currentPage = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (currentPage - 1) * limit;
+
+
+        const orders = await orderRepository
+            .getAllOrders(skip, limit)
+
+        console.log('all orders: ', orders);
+        const totalOrders = await Order.countDocuments();
+
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        return {
+            status: "Success",
+            message: "Orders fetched successfully",
+            data: {
+                orders,
+                currentPage,
+                totalPages,
+                totalOrders
+            },
+        };
+    } catch (error) {
+        console.log('error while getting all orders ', error);
+        return {
+            status: "Error", message: "Error while getting all orders"
         };
     }
 };
@@ -279,3 +331,87 @@ exports.getOrderById = async (req) => {
         };
     }
 };
+
+exports.updateOrder = async (req) => {
+    try {
+        const userId = req.user.id;
+        const orderId = req.params.id;
+        const body = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return {
+                status: "Validation",
+                message: "Invalid order ID",
+            };
+        }
+
+        const order = await orderRepository.findOrderById(orderId);
+
+        if (!order || order.user.toString() !== userId.toString()) {
+            return {
+                status: "RecordNotFound",
+                message: "Order not found",
+            };
+        }
+
+
+        const updatedData = {
+            shippingMethod: body.shippingMethod || order.shippingMethod,
+            orderStatus: body.orderStatus || order.orderStatus,
+            billingDetails: {
+                ...order.billingDetails,
+                ...body.billingDetails,
+            },
+        };
+
+        const updatedOrder = await orderRepository.updateOrder(orderId, updatedData);
+
+        return {
+            status: "Success",
+            message: "Order updated successfully",
+            data: updatedOrder,
+        };
+    } catch (error) {
+        console.log("error updating order", error);
+        return {
+            status: "Error",
+            message: "Error updating order",
+        };
+    }
+};
+
+exports.deleteOrder = async (req) => {
+    try {
+        const userId = req.user.id;
+        const orderId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(orderId)) {
+            return {
+                status: "Validation",
+                message: "Invalid order ID",
+            };
+        }
+
+        const order = await orderRepository.findOrderById(orderId);
+
+        if (!order || order.user.toString() !== userId.toString()) {
+            return {
+                status: "RecordNotFound",
+                message: "Order not found",
+            };
+        }
+
+        await orderRepository.deleteOrder(orderId);
+
+        return {
+            status: "Success",
+            message: "Order deleted successfully",
+        };
+    } catch (error) {
+        console.log("error deleting order", error);
+        return {
+            status: "Error",
+            message: "Error deleting order",
+        };
+    }
+}; 
