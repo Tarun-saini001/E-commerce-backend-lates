@@ -2,6 +2,10 @@ const router = require("express").Router();
 const { ROLES } = require("../config/constants");
 const authController = require("../controllers/auth.controller");
 const verifyToken = require("../middlewares/verifyToken");
+const createUploader = require("../middlewares/upload")
+
+const uploadProfile= createUploader("profile")
+
 
 router.post("/register", authController.register);
 router.post("/send-otp", authController.sendOTP);
@@ -18,4 +22,7 @@ router.get("/users",verifyToken(ROLES.ADMIN),authController.getAllUsers)
 
 router.patch("/changeStatus/:userId",verifyToken(ROLES.ADMIN),authController.toggleUserActiveStatus)
 router.get("/dashboard",verifyToken(ROLES.ADMIN),authController.getDashboardStats)
+router.post("/uploadProfile",verifyToken(ROLES.USER,ROLES.ADMIN),uploadProfile.single("profilePic"),authController.uploadProfilePic)
+
+router.patch("/",verifyToken(ROLES.USER,ROLES.ADMIN),authController.updateUser)
 module.exports = router;

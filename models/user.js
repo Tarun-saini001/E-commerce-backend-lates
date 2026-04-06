@@ -8,6 +8,7 @@ const userModel = mongoose.Schema({
     confirmPassword: { type: String },
     isVerified: { type: String, default: false },
     isActive: { type: Boolean, default: true },
+    profilePic: { type: String, default: "" },
     role: { type: Number, enum: Object.values(ROLES), default: ROLES.USER, },
 }, { timestamps: true });
 

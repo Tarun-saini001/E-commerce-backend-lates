@@ -489,6 +489,7 @@ exports.me = async (req, res) => {
 exports.changePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword, confirmPassword, isResetPassword } = req.body;
+        console.log(' req.body: ', req.body);
 
         if (!newPassword || !confirmPassword) {
             return {
@@ -521,6 +522,13 @@ exports.changePassword = async (req, res) => {
                     message: "Old password is required"
                 }
 
+            }
+
+            if (userData.password && (await bcrypt.compare(newPassword, userData.password))) {
+                return {
+                    status: "Validation",
+                    message: "New password same as old password"
+                }
             }
 
             const isMatch = await bcrypt.compare(oldPassword, userData.password);
@@ -557,13 +565,13 @@ exports.getAllUsers = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const filter = search
-        ? {
-            $or: [
-                { name: { $regex: search, $options: "i" } },
-                { email: { $regex: search, $options: "i" } }
-            ]
-        }
-        : {};
+            ? {
+                $or: [
+                    { name: { $regex: search, $options: "i" } },
+                    { email: { $regex: search, $options: "i" } }
+                ]
+            }
+            : {};
         console.log('filter: ', filter);
 
         const users = await userRepo.getAllUsers(filter, skip, limit);
@@ -687,6 +695,88 @@ exports.getDashboardStats = async () => {
         return {
             status: "Error",
             message: "Failed to fetch dashboard data",
+        };
+    }
+};
+
+exports.uploadProfilePic = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        if (!req.file)
+            return {
+                status: "Validation",
+                message: "No file uploaded",
+            }
+
+
+        const profilePicPath = `/uploads/profile/${req.file.filename}`;
+
+        const updatedUser = await user.findByIdAndUpdate(
+            userId,
+            { profilePic: profilePicPath },
+            { new: true }
+        );
+
+        return {
+            status: "Success",
+            data: updatedUser,
+            message: "Profile picture updated",
+        };
+    } catch (error) {
+        console.log("upload profile Service Error:", error.message);
+
+        return {
+            status: "Error",
+            message: "Failed to upload prile picture",
+        };
+    }
+}
+
+exports.updateUser = async (req) => {
+    try {
+        const userId = req.user.id;
+        const { name, email } = req.body;
+
+        const user = await userRepo.findUserById(userId);
+
+        if (!user) {
+            return {
+                status: "RecordNotFound",
+                message: "User not found",
+            };
+        }
+
+        if (!name || !name.trim()) {
+            return {
+                status: "Validation",
+                message: "Name is required",
+            };
+        }
+
+        // if (!email || !email.trim()) {
+        //   return {
+        //     status: "Validation",
+        //     message: "Email is required",
+        //   };
+        // }
+
+        user.name = name
+        // user.email = email;
+
+        await user.save();
+
+        return {
+            status: "Success",
+            message: "Profile updated successfully",
+            data: user,
+        };
+    } catch (error) {
+        console.log("update profile error:", error);
+
+        return {
+            status: "Error",
+            message: "Failed to update profile",
         };
     }
 };
