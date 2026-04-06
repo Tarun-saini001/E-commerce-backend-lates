@@ -550,17 +550,26 @@ exports.changePassword = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
     try {
-
-
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 6;
+        const search = req.query.search || "";
 
         const skip = (page - 1) * limit;
 
-        const users = await userRepo.getAllUsers(skip, limit);
+        const filter = search
+        ? {
+            $or: [
+                { name: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } }
+            ]
+        }
+        : {};
+        console.log('filter: ', filter);
+
+        const users = await userRepo.getAllUsers(filter, skip, limit);
         console.log('users: ', users);
 
-        const totalUsers = await userRepo.getUsersCount();
+        const totalUsers = await userRepo.getUsersCount(filter);
 
         if (!users || users.length === 0) {
             return {

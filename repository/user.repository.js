@@ -50,9 +50,9 @@ exports.getUserWithoutPassword = async (id) => {
 };
 
 
-exports.getAllUsers = async (skip, limit) => {
+exports.getAllUsers = async (filter, skip, limit) => {
     try {
-        return await user.find().select("-password -confirmPassword")
+        return await user.find(filter).select("-password -confirmPassword")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
@@ -62,6 +62,6 @@ exports.getAllUsers = async (skip, limit) => {
     }
 };
 
-exports.getUsersCount = async () => {
-    return await user.countDocuments();
+exports.getUsersCount = async (filter) => {
+    return await user.countDocuments(filter);
 };
