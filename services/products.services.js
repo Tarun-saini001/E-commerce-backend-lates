@@ -1,14 +1,11 @@
 
 const { default: mongoose } = require("mongoose");
 const Product = require("../models/product");
-const { success } = require("zod");
 const category = require("../models/category");
-const user = require("../models/user");
-const Order = require("../models/order");
 
 exports.getProducts = async (req, res) => {
     try {
-        const { category, page = 1, limit = 9 } = req.query;
+        const { category, page = 1, limit = 9, search } = req.query;
 
         const currentPage = parseInt(page);
         const perPage = parseInt(limit);
@@ -22,6 +19,16 @@ exports.getProducts = async (req, res) => {
                 $regex: new RegExp(`^${category}$`, "i"),
             };
         }
+        // searching
+        if (search && search.trim()) {
+            const searchRegex = new RegExp(search.trim(), "i");
+
+            filter.$or = [
+                { title: searchRegex },
+                { categoryName: searchRegex },
+            ];
+        }
+
 
         const products = await Product.find(filter)
             .sort({ createdAt: -1 })
