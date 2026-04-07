@@ -11,4 +11,6 @@ router.post("/",verifyToken(ROLES.ADMIN),uploadCategory.single("image"),category
 router.delete("/:id",verifyToken(ROLES.ADMIN),categoryController.deleteCategory)
 router.patch("/:id",verifyToken(ROLES.ADMIN),uploadCategory.single("image"),categoryController.updateCategory)
 
+// get all categories without pagination
+router.get("/withoutPagination",categoryController.getAllCategories)
 module.exports = router;

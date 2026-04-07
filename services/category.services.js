@@ -1,4 +1,5 @@
 
+const category = require("../models/category");
 const Category = require("../models/category");
 
 exports.getCategories = async (req, res) => {
@@ -11,9 +12,9 @@ exports.getCategories = async (req, res) => {
     const skip = (currentPage - 1) * perPage;
 
     const categories = await Category.find()
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(perPage);
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(perPage);
     console.log('categories: ', categories);
 
     const totalCategories = await Category.countDocuments();
@@ -39,6 +40,34 @@ exports.getCategories = async (req, res) => {
   }
 };
 
+// get all categories without pagination
+exports.getAllCategories = async (req, res) => {
+  try {
+    const categories = await category.find()
+      .sort({ createdAt: -1 });
+    console.log('categories: ', categories);
+
+    if(! categories){
+      return{
+        status:"RecordNotFound",
+        message:"Categories Not Found"
+      }
+    }
+
+    return{
+      status:"Success",
+      message:"Categories Fetched Successfully!",
+      data:categories
+    }
+
+  } catch (error) {
+    console.log("getAllCategories error: ", error.message);
+    return {
+      status: "Error",
+      message: "Failed to fetch all categories"
+    }
+  }
+}
 
 exports.addCategory = async (req, res) => {
   try {

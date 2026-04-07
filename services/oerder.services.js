@@ -127,14 +127,14 @@ exports.createOrder = async (req) => {
         const populatedCartItems = await cart.populate("items.productId");
 
 
-        const subtotal = populatedCartItems.items.reduce((acc, item) => {
+        let subtotal = populatedCartItems.items.reduce((acc, item) => {
             const price = item.productId?.price || 0;
             return acc + price * item.quantity;
         }, 0);
 
-        const shippingFee = 15;
-        const tax = subtotal * 0.05;
-        const total = subtotal + shippingFee + tax;
+        let shippingFee = 15;
+        let tax = subtotal * 0.05;
+        let total = subtotal + shippingFee + tax;
 
         subtotal = subtotal.toFixed(2);
         tax = tax.toFixed(2);
