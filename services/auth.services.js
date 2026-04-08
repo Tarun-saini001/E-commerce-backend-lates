@@ -318,19 +318,19 @@ exports.login = async (req, res) => {
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            // secure: false,
-            // sameSite: "lax",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 15 * 60 * 1000
         });
 
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            // secure: false,
-            // sameSite: "lax",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
         return {
@@ -405,19 +405,19 @@ exports.refreshToken = async (req, res) => {
 
         res.cookie("refreshToken", newRefreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            // secure: false,
-            // sameSite: "lax",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            // secure: false,
-            // sameSite: "lax",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 15 * 60 * 1000
         });
 
@@ -564,14 +564,19 @@ exports.getAllUsers = async (req, res) => {
 
         const skip = (page - 1) * limit;
 
-        const filter = search
-            ? {
-                $or: [
-                    { name: { $regex: search, $options: "i" } },
-                    { email: { $regex: search, $options: "i" } }
-                ]
-            }
-            : {};
+        let filter = {
+            role: { $ne: 1 } 
+        };
+
+        
+        if (search) {
+            filter.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } }
+            ];
+        }
+
+
         console.log('filter: ', filter);
 
         const users = await userRepo.getAllUsers(filter, skip, limit);

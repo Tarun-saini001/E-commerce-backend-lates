@@ -1,11 +1,13 @@
 
 const { default: mongoose } = require("mongoose");
 const Product = require("../models/product");
-const category = require("../models/category");
+const categoryModel = require("../models/category");
+const { regex } = require("zod");
 
 exports.getProducts = async (req, res) => {
     try {
         const { category, page = 1, limit = 9, search } = req.query;
+        console.log('category: ', category);
 
         const currentPage = parseInt(page);
         const perPage = parseInt(limit);
@@ -13,12 +15,27 @@ exports.getProducts = async (req, res) => {
         const skip = (currentPage - 1) * perPage;
 
         let filter = {};
-
+        
         if (category) {
-            filter.categoryName = {
-                $regex: new RegExp(`^${category}$`, "i"),
-            };
+            const categoryData = await categoryModel.findOne({
+                name:{ $regex: new RegExp(`^${category}$`,"i")}
+            })
+            if(categoryData){
+                filter.category= categoryData._id
+            }else{
+                return{
+                    status:"Success",
+                    message:"No Products Found",
+                    data:{
+                        products:[],
+                        currentPage,
+                        totalPages: 0,
+                        totalProducts: 0,
+                    }
+                }
+            }
         }
+        console.log('filter: ', filter);
         // searching
         if (search && search.trim()) {
             const searchRegex = new RegExp(search.trim(), "i");

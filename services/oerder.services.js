@@ -271,6 +271,7 @@ exports.getAllOrders = async (req) => {
         const totalOrders = await Order.countDocuments();
 
         const totalPages = Math.ceil(totalOrders / limit);
+        console.log('totalPages: ', totalPages);
 
         return {
             status: "Success",
