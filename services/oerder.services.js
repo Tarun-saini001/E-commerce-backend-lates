@@ -1,5 +1,6 @@
 const cartModel = require("../models/cart");
 const Order = require("../models/order");
+const product = require("../models/product");
 const user = require("../models/user");
 const orderRepository = require("../repository/order.repository");
 const userRepository = require("../repository/user.repository")
@@ -179,7 +180,12 @@ exports.createOrder = async (req) => {
         const order = await orderRepository.createOrder(orderPayload);
         console.log('order: (create) ', order);
 
-
+        for (const item of populatedCartItems.items) {
+            await product.findByIdAndUpdate(
+                item.productId._id,
+                { $inc: { stock: -item.quantity } }
+            );
+        }
         // clear cart after order
         await cartModel.findOneAndUpdate(
             { user: userId },

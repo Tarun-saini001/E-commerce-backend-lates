@@ -1,7 +1,8 @@
 const { default: mongoose } = require("mongoose");
 const verifyToken = require("../middlewares/verifyToken");
 const cart = require("../models/cart");
-const cartRepo = require("../repository/cart.repository")
+const cartRepo = require("../repository/cart.repository");
+const product = require("../models/product");
 
 exports.addToCart = async (req) => {
     try {
@@ -28,7 +29,13 @@ exports.addToCart = async (req) => {
                 message: "Valid Product ID is required",
             };
         }
-
+        const productData = await product.findById(productId);
+        if (!productData) {
+            return {
+                status: "NotFound",
+                message: "Product not found",
+            };
+        }
         // console.log('categoryName,: ', categoryName);
         // if (!_id || !title || !price) {
         //     return {
@@ -52,15 +59,58 @@ exports.addToCart = async (req) => {
             (item) => item.productId.toString() === productId
         );
 
+        // if (existingItem) {
+        //     existingItem.quantity += quantity;
+        //     if (newQty > productData.stock) {
+        //         return {
+        //             status: "Error",
+        //             message: `Only ${productData.stock} items available in stock`,
+        //         };
+        //     }
+
+        //     existingItem.quantity = newQty;
+        // } else {
+        //     if (quantity > productData.stock) {
+        //         return {
+        //             status: "Error",
+        //             message: `Only ${productData.stock} items available in stock`,
+        //         };
+        //     }
+
+        //     cartData.items.push({
+        //         productId,
+        //         quantity,
+        //     });
+        // }
+
         if (existingItem) {
-            existingItem.quantity += quantity;
+            const newQty = existingItem.quantity + quantity;
+
+        
+            if (newQty > productData.stock) {
+                return {
+                    status: "Error",
+                    message: `Only ${productData.stock} items available in stock`,
+                };
+            }
+
+           
+            existingItem.quantity = newQty;
+
         } else {
+          
+            if (quantity > productData.stock) {
+                return {
+                    status: "Error",
+                    message: `Only ${productData.stock} items available in stock`,
+                };
+            }
+
             cartData.items.push({
                 productId,
                 quantity,
             });
         }
-
         // recalculate subtotal
         // cartData.subtotal = cartData.items.reduce(
         //     (total, item) => total + item.price * item.quantity,
@@ -85,6 +135,7 @@ exports.addToCart = async (req) => {
                 category: p.category,
                 categoryName: p.categoryName,
                 quantity: item.quantity,
+                stock: p.stock
             };
         });
 
@@ -232,11 +283,12 @@ exports.updateCart = async (req) => {
             category: item.productId.category,
             categoryName: item.productId.categoryName,
             quantity: item.quantity,
+            stock: item.productId.stock,
         }));
 
         return {
             status: "Success",
-            message:"Quantity Updates successfully",
+            message: "Quantity Updates successfully",
             data: {
                 items: transformedItems,
                 subtotal: cartData.subtotal,
@@ -300,7 +352,7 @@ exports.removeItem = async (req) => {
 
         return {
             status: "Success",
-            message:"Item removed successfully",
+            message: "Item removed successfully",
             data: {
                 items: transformedItems,
                 subtotal: cartData.subtotal,

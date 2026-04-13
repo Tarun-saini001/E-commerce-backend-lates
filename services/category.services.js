@@ -4,20 +4,25 @@ const Category = require("../models/category");
 
 exports.getCategories = async (req, res) => {
   try {
-    const { page = 1, limit = 6 } = req.query;
+    const { page = 1, limit = 6, search = "" } = req.query;
 
     const currentPage = parseInt(page);
     const perPage = parseInt(limit);
 
     const skip = (currentPage - 1) * perPage;
 
-    const categories = await Category.find()
+    let filter = {};
+    if (search.trim()) {
+      filter.name = { $regex: search.trim(), $options: "i" };
+    }
+
+    const categories = await Category.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(perPage);
     console.log('categories: ', categories);
 
-    const totalCategories = await Category.countDocuments();
+    const totalCategories = await Category.countDocuments(filter);
 
     const totalPages = Math.ceil(totalCategories / perPage);
 
@@ -47,17 +52,17 @@ exports.getAllCategories = async (req, res) => {
       .sort({ createdAt: -1 });
     console.log('categories: ', categories);
 
-    if(! categories){
-      return{
-        status:"RecordNotFound",
-        message:"Categories Not Found"
+    if (!categories) {
+      return {
+        status: "RecordNotFound",
+        message: "Categories Not Found"
       }
     }
 
-    return{
-      status:"Success",
-      message:"Categories Fetched Successfully!",
-      data:categories
+    return {
+      status: "Success",
+      message: "Categories Fetched Successfully!",
+      data: categories
     }
 
   } catch (error) {
