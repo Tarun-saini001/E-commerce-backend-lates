@@ -5,7 +5,8 @@ const user = require("../models/user");
 const orderRepository = require("../repository/order.repository");
 const userRepository = require("../repository/user.repository")
 const mongoose = require('mongoose');
-
+const Stripe = require("stripe");
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // exports.createOrder = async (req) => {
 //     console.log('req.body: ', req.body);
 //     const userId = req.user.id;
@@ -99,8 +100,31 @@ const mongoose = require('mongoose');
 exports.createOrder = async (req) => {
     try {
         console.log('req.body: ', req.body);
-        const userId = req.user.id;
-        const body = req.body;
+        const { sessionId } = req.body;
+
+        if (!sessionId) {
+            return {
+                status: "Validation",
+                message: "Session ID is required",
+            };
+        }
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+        if (session.payment_status !== "paid") {
+            return {
+                status: "Error",
+                message: "Payment not completed",
+            };
+        }
+        const userId = session.metadata.userId;
+        const billing = JSON.parse(session.metadata.billingDetails);
+        if (!session.metadata.billingDetails) {
+            return {
+                status: "Error",
+                message: "Billing details missing in Stripe metadata",
+            };
+        }
+        const shippingMethod = session.metadata.shippingMethod;
 
 
         const userData = await userRepository.findUserById(userId);
@@ -113,7 +137,8 @@ exports.createOrder = async (req) => {
             };
         }
 
-        const cart = await cartModel.findOne({ user: userId });
+        const cart = await cartModel.findOne({ user: userId }).populate("items.productId");
+
         console.log('cart: fetch cart data in create order', cart);
 
         if (!cart || cart.items.length === 0) {
@@ -125,10 +150,7 @@ exports.createOrder = async (req) => {
 
 
 
-        const populatedCartItems = await cart.populate("items.productId");
-
-
-        let subtotal = populatedCartItems.items.reduce((acc, item) => {
+        let subtotal = cart.items.reduce((acc, item) => {
             const price = item.productId?.price || 0;
             return acc + price * item.quantity;
         }, 0);
@@ -141,7 +163,7 @@ exports.createOrder = async (req) => {
         tax = tax.toFixed(2);
         total = total.toFixed(2);
 
-        const transformedItems = populatedCartItems.items.map((item) => ({
+        const transformedItems = cart.items.map((item) => ({
             _id: item.productId._id,
             title: item.productId.title,
             price: item.productId.price,
@@ -155,24 +177,24 @@ exports.createOrder = async (req) => {
 
             billingDetails: {
                 name: userData.name,
-                country: body.billingDetails.country,
-                city: body.billingDetails.city,
-                district: body.billingDetails.district,
-                postalCode: body.billingDetails.postalCode,
-                address: body.billingDetails.address,
-                phone: body.billingDetails.phone,
+                country: billing.country,
+                city: billing.city,
+                district: billing.district,
+                postalCode: billing.postalCode,
+                address: billing.address,
+                phone: billing.phone,
                 email: userData.email,
             },
 
             items: transformedItems,
 
-            shippingMethod: body.shippingMethod,
+            shippingMethod,
 
             subtotal,
             shippingFee,
             tax,
             total,
-            orderStatus: body.orderStatus
+            orderStatus: "completed"
         };
 
 
@@ -180,7 +202,7 @@ exports.createOrder = async (req) => {
         const order = await orderRepository.createOrder(orderPayload);
         console.log('order: (create) ', order);
 
-        for (const item of populatedCartItems.items) {
+        for (const item of cart.items) {
             await product.findByIdAndUpdate(
                 item.productId._id,
                 { $inc: { stock: -item.quantity } }
