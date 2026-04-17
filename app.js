@@ -15,8 +15,8 @@ app.use(cookieParser())
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(cors({
-    // origin:process.env.ALLOW_ORIGIN,
-    origin: "http://localhost:5173",
+    origin:process.env.ALLOW_ORIGIN,
+    // origin: "http://localhost:5173",
     credentials: true
 }))
 
