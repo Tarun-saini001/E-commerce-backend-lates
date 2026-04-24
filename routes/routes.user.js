@@ -3,20 +3,24 @@ const { ROLES } = require("../config/constants");
 const authController = require("../controllers/auth.controller");
 const verifyToken = require("../middlewares/verifyToken");
 const createUploader = require("../middlewares/upload")
-const { updateUserSchema } = require("../validations/update.user")
-const validateRequest = require("../middlewares/validateRequest")
+const { updateUserSchema } = require("../validations/auth/update.user")
+const validateRequest = require("../middlewares/validateRequest");
+const { sendOtpSchema } = require("../validations/auth/send-otp");
+const { verifyOtpSchema } = require("../validations/auth/verify-otp");
+const { loginSchema } = require("../validations/auth/login");
+const { changePasswordSchema } = require("../validations/auth/change-password");
 const uploadProfile = createUploader("profile")
 
 router.post("/register", authController.register);
-router.post("/send-otp", authController.sendOTP);
-router.post("/verifyOtp", authController.verifyOTP);
-router.post("/login", authController.login);
+router.post("/send-otp", validateRequest(sendOtpSchema),authController.sendOTP);
+router.post("/verifyOtp",validateRequest(verifyOtpSchema), authController.verifyOTP);
+router.post("/login",validateRequest(loginSchema), authController.login);
 router.post("/refreshToken", authController.refreshToken);
 router.post("/logout", authController.logout);
 
 router.get("/me", verifyToken(ROLES.USER, ROLES.ADMIN), authController.getUser);
 
-router.post("/change-password", verifyToken(ROLES.USER, ROLES.ADMIN), authController.changePassword);
+router.post("/change-password", verifyToken(ROLES.USER, ROLES.ADMIN),validateRequest(changePasswordSchema), authController.changePassword);
 
 router.get("/users", verifyToken(ROLES.ADMIN), authController.getAllUsers)
 
