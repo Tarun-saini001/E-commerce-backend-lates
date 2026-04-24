@@ -21,10 +21,11 @@ const changePasswordSchema = z
             .string()
             .trim()
             .nonempty("Confirm password is required"),
+        isResetPassword: z.boolean()
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
         message: "Passwords do not match",
         path: ["confirmPassword"],
     });
 
-    module.exports={changePasswordSchema}
+module.exports = { changePasswordSchema }
