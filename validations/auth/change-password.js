@@ -2,7 +2,7 @@ const z = require("zod")
 
 const changePasswordSchema = z
     .object({
-        currentPassword: z
+        oldPassword: z
             .string()
             .trim()
             .nonempty("Current password is required"),
