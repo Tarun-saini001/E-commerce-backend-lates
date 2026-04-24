@@ -62,15 +62,15 @@ const {z} = require("zod")
 
     billingDetails: billingSchema.optional(),
 
-    items: z.array(orderItemSchema)
-        .min(1, { message: "At least one item is required" }).optional(),
+    // items: z.array(orderItemSchema)
+    //     .min(1, { message: "At least one item is required" }).optional(),
 
     shippingMethod: z.enum(["upi", "cod"], {
         errorMap: () => ({ message: "Invalid shipping method" }),
     }).default("cod"),
 
-    orderStatus: z.enum(["pending", "processing", "completed"])
-        .default("pending"),
+    // orderStatus: z.enum(["pending", "processing", "completed"])
+    //     .default("pending"),
 })
 
 module.exports = {
