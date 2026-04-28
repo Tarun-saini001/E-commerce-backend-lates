@@ -248,7 +248,7 @@ exports.verifyOtp = async (req, res) => {
 
                 // generate temporary token 
                 const tempToken = jwt.sign(
-                    { id: userData._id, email },
+                    { id: userData._id, email,role: userData.role },
                     process.env.JWT_SECRET_KEY,
                     { expiresIn: "10m" }
                 );
@@ -318,19 +318,19 @@ exports.login = async (req, res) => {
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            // secure: false,
-            // sameSite: "lax",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 15 * 60 * 1000
         });
 
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            // secure: false,
-            // sameSite: "lax",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
         return {
@@ -405,19 +405,19 @@ exports.refreshToken = async (req, res) => {
 
         res.cookie("refreshToken", newRefreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            // secure: false,
-            // sameSite: "lax",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            // secure: false,
-            // sameSite: "lax",
+            // secure: true,
+            // sameSite: "none",
+            secure: false,
+            sameSite: "lax",
             maxAge: 15 * 60 * 1000
         });
 
@@ -527,7 +527,7 @@ exports.changePassword = async (req, res) => {
             if (userData.password && (await bcrypt.compare(newPassword, userData.password))) {
                 return {
                     status: "Validation",
-                    message: "New password same as old password"
+                    message: "New password same as corrent password"
                 }
             }
 
@@ -535,7 +535,7 @@ exports.changePassword = async (req, res) => {
             if (!isMatch) {
                 return {
                     status: "Validation",
-                    message: "Old password is incorrect"
+                    message: "Current password is incorrect"
                 }
             }
         }

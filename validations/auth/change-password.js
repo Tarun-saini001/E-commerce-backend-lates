@@ -5,7 +5,7 @@ const changePasswordSchema = z
         oldPassword: z
             .string()
             .trim()
-            .nonempty("Current password is required"),
+            .nonempty("Current password is required").optional(),
 
         newPassword: z
             .string()

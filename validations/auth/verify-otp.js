@@ -1,4 +1,9 @@
 const z = require("zod")
+const OTP_TYPES = {
+    REGISTER: 1,
+    LOGIN: 2,
+    FORGOT_PASSWORD: 3,
+};
 
 const verifyOtpSchema = z.object({
     email: z
@@ -11,9 +16,9 @@ const verifyOtpSchema = z.object({
         ),
     otp: z.number()
         .int("OTP must be an integer")
-        .min(100000, "OTP must be a 6-digit positive number")
-        .max(999999, "OTP must be a 6-digit positive number"),
-    otpType: z.enum([1, 2, 3])
+        .min(1000, "OTP must be a 4-digit positive number")
+        .max(9999, "OTP must be a 4-digit positive number"),
+    otpType: z.nativeEnum(OTP_TYPES)
 })
 
 module.exports = {
