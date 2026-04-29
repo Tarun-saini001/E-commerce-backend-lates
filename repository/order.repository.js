@@ -1,6 +1,7 @@
 const Order = require("../models/order");
 
 exports.createOrder = async (payload) => {
+    console.log('payload: ', payload);
     try {
         return await Order.create(payload);
     } catch (error) {

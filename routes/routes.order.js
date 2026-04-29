@@ -6,6 +6,7 @@ const orderController = require("../controllers/order.controller");
 const { ROLES } = require("../config/constants");
 
 router.post("/add",verifyToken(ROLES.USER,ROLES.ADMIN),orderController.createOrder)
+router.post("/addCOD",verifyToken(ROLES.USER,ROLES.ADMIN),orderController.createCODOrder)
 router.get("/orders",verifyToken(ROLES.ADMIN),orderController.getAllOrders)
 router.get("/", verifyToken(ROLES.USER,ROLES.ADMIN), orderController.getOrders);
 router.get("/:id",verifyToken(ROLES.USER,ROLES.ADMIN),orderController.getOrderById)

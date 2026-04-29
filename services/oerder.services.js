@@ -7,95 +7,120 @@ const userRepository = require("../repository/user.repository")
 const mongoose = require('mongoose');
 const Stripe = require("stripe");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-// exports.createOrder = async (req) => {
-//     console.log('req.body: ', req.body);
-//     const userId = req.user.id;
-//     const body = req.body;
+
+exports.createCODOrder = async (req) => {
+    console.log('req.body: ', req.body);
+    const userId = req.user.id;
+    const body = req.body;
 
 
-//     const userData = await userRepository.findUserById(userId);
-//     console.log('userData: ', userData);
+    const userData = await userRepository.findUserById(userId);
+    console.log('userData: ', userData);
 
-//     if (!userData) {
-//         return {
-//             status: "RecordNotFound",
-//             message: "User not found",
-//         };
-//     }
-//     // get user cart
-//     const cart = await cartModel.findOne({ user: userId });
+    if (!userData) {
+        return {
+            status: "RecordNotFound",
+            message: "User not found",
+        };
+    }
+    // get user cart
+    console.log('userId: ', userId);
 
-//     if (!cart || cart.items.length === 0) {
-//         return {
-//             status: "RecordNotFound",
-//             message: "Cart is empty",
-//         };
-//     }
+    const cart = await cartModel
+        .findOne({ user: userId })
+        .populate("items.productId");
 
-//     // calculate totals
-//     const subtotal = cart.subtotal;
-//     const shippingFee = 15;
-//     const tax = subtotal * 0.05;
-//     const total = subtotal + shippingFee + tax;
+    console.log('cart: ', cart);
 
+    if (!cart || cart.items.length === 0) {
+        return {
+            status: "RecordNotFound",
+            message: "Cart is empty",
+        };
+    }
 
-//     const orderPayload = {
-//         user: userId,
+    let subtotal = cart.items.reduce((acc, item) => {
+        const price = item.productId?.price || 0;
+        return acc + price * item.quantity;
+    }, 0);
 
-//         billingDetails: {
-//             name: userData.name,
-//             country: body.billingDetails.country,
-//             city: body.billingDetails.city,
-//             district: body.billingDetails.district,
-//             postalCode: body.billingDetails.postalCode,
-//             address: body.billingDetails.address,
-//             phone: body.billingDetails.phone,
-//             email: userData.email,
-//         },
+    let shippingFee = 15;
+    let tax = subtotal * 0.05;
+    let total = subtotal + shippingFee + tax;
 
-//         items: cart.items,
+    subtotal = subtotal.toFixed(2);
+    tax = tax.toFixed(2);
+    total = total.toFixed(2);
 
-//         shippingMethod: body.shippingMethod,
-
-//         subtotal,
-//         shippingFee,
-//         tax,
-//         total,
-//         orderStatus: body.orderStatus
-//     };
+    const transformedItems = cart.items.map((item) => ({
+        productId: item.productId._id,
+        title: item.productId.title,
+        price: item.productId.price,
+        thumbnail: item.productId.thumbnail,
+        brand: item.productId.brand,
+        category: item.productId.category,
+        quantity: item.quantity,
+         totalPrice: item.productId.price * item.quantity,
+    }));
 
 
-//     const order = await orderRepository.createOrder(orderPayload);
-//     console.log('order: (create) ', order);
+    // const populatedCart = await cartModel
+    //     .findOne({ user: userId })
+    //     .populate("items.productId");
 
-//     const populatedOrder = await order.populate("items.productId");
+    // const transformedItems = populatedCart.items.map((item) => ({
+    //     productId: item.productId._id,
+    //     title: item.productId.title,
+    //     price: item.productId.price,
+    //     thumbnail: item.productId.thumbnail,
+    //     brand: item.productId.brand,
+    //     category: item.productId.category,
+    //     quantity: item.quantity,
+    //     totalPrice: item.productId.price * item.quantity,
+    // }));
 
-//     const transformedItems = populatedOrder.items.map((item) => ({
-//         _id: item.productId._id,
-//         title: item.productId.title,
-//         price: item.productId.price,
-//         thumbnail: item.productId.thumbnail,
-//         brand: item.productId.brand,
-//         category: item.productId.category,
-//         quantity: item.quantity,
-//     }));
+    const orderPayload = {
+        user: userId,
 
-//     // clear cart after order
-//     await cartModel.findOneAndUpdate(
-//         { user: userId },
-//         { items: [], subtotal: 0 }
-//     );
+        billingDetails: {
+            name: userData.name,
+            country: body.billingDetails.country,
+            city: body.billingDetails.city,
+            district: body.billingDetails.district,
+            postalCode: body.billingDetails.postalCode,
+            address: body.billingDetails.address,
+            phone: body.billingDetails.phone,
+            email: userData.email,
+        },
+
+        items: transformedItems,
+
+        shippingMethod: body.shippingMethod,
+
+        subtotal,
+        shippingFee,
+        tax,
+        total,
+        orderStatus: body.orderStatus
+    };
 
 
-//     return {
-//         status: "Success",
-//         message: "Order placed successfully",
-//         data: {
-//             ...populatedOrder.toObject(),
-//             items: transformedItems
-//         }
-//     };
-// };
+    const order = await orderRepository.createOrder(orderPayload);
+    console.log('order: (create) ', order);
+
+    // clear cart after order
+    await cartModel.findOneAndUpdate(
+        { user: userId },
+        { items: [], subtotal: 0 }
+    );
+
+
+    return {
+        status: "Success",
+        message: "Order placed successfully",
+        data: order
+    };
+};
 
 exports.createOrder = async (req) => {
     try {
@@ -194,7 +219,7 @@ exports.createOrder = async (req) => {
             shippingFee,
             tax,
             total,
-            orderStatus: "completed"
+            orderStatus: "pending"
         };
 
 
