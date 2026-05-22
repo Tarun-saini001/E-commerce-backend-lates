@@ -154,6 +154,7 @@ exports.sendOtp = async (req, res) => {
 exports.verifyOtp = async (req, res) => {
     try {
         const { name, email, password, confirmPassword, otp, otpType } = req.body;
+        console.log("🚀 ~ req.body:", req.body)
 
         if (!email || !otp || !otpType) {
             return {

@@ -14,11 +14,12 @@ const verifyOtpSchema = z.object({
             /^[a-zA-Z0-9._%+-]+@[a-zA-Z]+\.[a-zA-Z]{2,3}$/,
             "Invalid email format"
         ),
-    otp: z.number()
-        .int("OTP must be an integer")
-        .min(1000, "OTP must be a 4-digit positive number")
-        .max(9999, "OTP must be a 4-digit positive number"),
-    otpType: z.nativeEnum(OTP_TYPES)
+    otp: z.string()
+        .regex(/^\d{4}$/, "OTP must be exactly 4 digits"),
+    otpType: z.nativeEnum(OTP_TYPES),
+    name: z.string().optional(),
+    password: z.string().optional(),
+    confirmPassword: z.string().optional(),
 })
 
 module.exports = {
