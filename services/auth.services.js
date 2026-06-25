@@ -17,6 +17,13 @@ const tokenRepo = require("../repository/token.repository");
 const product = require("../models/product");
 const Order = require("../models/order");
 
+const isProduction = process.env.NODE_ENV === "production";
+const cookieOptions = {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+};
+
 
 exports.register = async (req, res) => {
     try {
@@ -154,7 +161,7 @@ exports.sendOtp = async (req, res) => {
 exports.verifyOtp = async (req, res) => {
     try {
         const { name, email, password, confirmPassword, otp, otpType } = req.body;
-        console.log("🚀 ~ req.body:", req.body)
+        console.log("req.body in verify otp:", req.body)
 
         if (!email || !otp || !otpType) {
             return {
@@ -249,7 +256,7 @@ exports.verifyOtp = async (req, res) => {
 
                 // generate temporary token 
                 const tempToken = jwt.sign(
-                    { id: userData._id, email,role: userData.role },
+                    { id: userData._id, email, role: userData.role },
                     process.env.JWT_SECRET_KEY,
                     { expiresIn: "10m" }
                 );
@@ -317,22 +324,32 @@ exports.login = async (req, res) => {
             Date.now() + 7 * 24 * 60 * 60 * 1000
         )
 
+        // res.cookie("accessToken", accessToken, {
+        //     httpOnly: true,
+        //     // secure: true,
+        //     // sameSite: "none",
+        //     secure: false,
+        //     sameSite: "lax",
+        //     maxAge: 15 * 60 * 1000
+        // });
+
+        // res.cookie("refreshToken", refreshToken, {
+        //     httpOnly: true,
+        //     // secure: true,
+        //     // sameSite: "none",
+        //     secure: false,
+        //     sameSite: "lax",
+        //     maxAge: 7 * 24 * 60 * 60 * 1000
+        // });
+
         res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            // secure: true,
-            // sameSite: "none",
-            secure: false,
-            sameSite: "lax",
-            maxAge: 15 * 60 * 1000
+            ...cookieOptions,
+            maxAge: 15 * 60 * 1000,
         });
 
         res.cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            // secure: true,
-            // sameSite: "none",
-            secure: false,
-            sameSite: "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            ...cookieOptions,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         return {
             status: "Success",
@@ -404,22 +421,32 @@ exports.refreshToken = async (req, res) => {
         )
 
 
-        res.cookie("refreshToken", newRefreshToken, {
-            httpOnly: true,
-            // secure: true,
-            // sameSite: "none",
-            secure: false,
-            sameSite: "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
+        // res.cookie("refreshToken", newRefreshToken, {
+        //     httpOnly: true,
+        //     // secure: true,
+        //     // sameSite: "none",
+        //     secure: false,
+        //     sameSite: "lax",
+        //     maxAge: 7 * 24 * 60 * 60 * 1000
+        // });
+
+        // res.cookie("accessToken", accessToken, {
+        //     httpOnly: true,
+        //     // secure: true,
+        //     // sameSite: "none",
+        //     secure: false,
+        //     sameSite: "lax",
+        //     maxAge: 15 * 60 * 1000
+        // });
 
         res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            // secure: true,
-            // sameSite: "none",
-            secure: false,
-            sameSite: "lax",
-            maxAge: 15 * 60 * 1000
+            ...cookieOptions,
+            maxAge: 15 * 60 * 1000,
+        });
+
+        res.cookie("refreshToken", refreshToken, {
+            ...cookieOptions,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         return {
@@ -566,10 +593,10 @@ exports.getAllUsers = async (req, res) => {
         const skip = (page - 1) * limit;
 
         let filter = {
-            role: { $ne: 1 } 
+            role: { $ne: 1 }
         };
 
-        
+
         if (search) {
             filter.$or = [
                 { name: { $regex: search, $options: "i" } },
