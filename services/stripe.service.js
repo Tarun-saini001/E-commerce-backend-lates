@@ -77,8 +77,10 @@ exports.createCheckoutSession = async (req) => {
             line_items,
             mode: "payment",
 
-            success_url: `http://localhost:5173/payment-success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `http://localhost:5173/cart`,
+            // success_url: `http://localhost:5173/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+            // cancel_url: `http://localhost:5173/cart`,
+            success_url: `${process.env.CLIENT_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.CLIENT_URL}/cart`,
 
             metadata: {
                 userId: userId.toString(),
